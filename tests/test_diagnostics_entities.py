@@ -228,15 +228,22 @@ async def test_automation_priorities_share_one_state(
 async def test_unknown_raw_values_do_not_break_the_entities(
     hass: HomeAssistant, setup_units
 ) -> None:
-    """A code that is in no table gives the unknown state, not an error."""
+    """A code that is in no table reports "unrecognized", not an error.
+
+    The state deliberately is not "unknown": Home Assistant uses that for "no
+    data yet", and the two must stay distinguishable in the logbook.
+    """
     _, gateway = await setup_units([UNIT])
     gateway.push_unit_properties(12, properties(condition_raw=0x42, priority_raw=0x1F))
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id_of(hass, "sensor", "condition")).state == "unknown"
+    assert (
+        hass.states.get(entity_id_of(hass, "sensor", "condition")).state
+        == "unrecognized"
+    )
     assert (
         hass.states.get(entity_id_of(hass, "sensor", "priority_source")).state
-        == "unknown"
+        == "unrecognized"
     )
     assert hass.states.get(entity_id_of(hass, "binary_sensor", "problem")).state == "on"
 

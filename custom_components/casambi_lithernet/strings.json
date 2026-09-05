@@ -279,7 +279,7 @@
           "incompatible_hw": "Incompatible hardware",
           "hw_not_found": "Hardware not found",
           "configuration_failed": "Configuration failed",
-          "unknown": "Unknown"
+          "unrecognized": "Not recognised"
         }
       },
       "priority_source": {
@@ -294,7 +294,7 @@
           "clock_timer": "Clock timer",
           "startup": "Start-up",
           "automation": "Casambi automation",
-          "unknown": "Unknown"
+          "unrecognized": "Not recognised"
         }
       },
       "battery_level": {

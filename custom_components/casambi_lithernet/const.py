@@ -280,7 +280,7 @@ CONDITION_CODES: Final[dict[int, str]] = {
 }
 
 CONDITION_OK: Final = "ok"
-CONDITION_UNKNOWN: Final = "unknown"
+CONDITION_UNKNOWN: Final = "unrecognized"
 
 #: `priority` low bits -> what last set the luminaire.
 PRIORITY_SOURCES: Final[dict[int, str]] = {
@@ -295,7 +295,7 @@ PRIORITY_SOURCES: Final[dict[int, str]] = {
 }
 
 PRIORITY_AUTOMATION: Final = "automation"
-PRIORITY_UNKNOWN: Final = "unknown"
+PRIORITY_UNKNOWN: Final = "unrecognized"
 
 #: Button states (manual 5.6.2.1.7). Used by package M.
 BUTTON_STATE_SHORT_PRESS: Final = 2
