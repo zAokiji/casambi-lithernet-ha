@@ -91,6 +91,7 @@ def make_entry() -> Callable[..., MockConfigEntry]:
         return MockConfigEntry(
             domain=DOMAIN,
             title=f"Casambi Bridge {bridge_id}",
+            unique_id=f"{DOMAIN}_{bridge_id}",
             data={
                 CONF_BRIDGE_ID: bridge_id,
                 CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
