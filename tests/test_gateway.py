@@ -6,7 +6,9 @@ import asyncio
 import logging
 
 import pytest
+from homeassistant.components.mqtt.const import MQTT_CONNECTION_STATE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.casambi_lithernet import gateway as gateway_module
 from custom_components.casambi_lithernet.const import TargetType
@@ -380,8 +382,16 @@ async def test_availability_is_false_before_start(
     assert create_gateway(hass, GatewayConfig()).available is False
 
 
-async def test_subscribe_availability_can_be_removed(gateway) -> None:
-    """Watching the connection is optional and can be stopped again."""
+async def test_subscribe_availability_can_be_removed(hass, gateway) -> None:
+    """After removing the watcher, connection changes stop arriving."""
     seen: list[bool] = []
     remove = gateway.subscribe_availability(seen.append)
+
+    async_dispatcher_send(hass, MQTT_CONNECTION_STATE, False)
+    await hass.async_block_till_done()
+    assert seen == [False]
+
     remove()
+    async_dispatcher_send(hass, MQTT_CONNECTION_STATE, True)
+    await hass.async_block_till_done()
+    assert seen == [False]
