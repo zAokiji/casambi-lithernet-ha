@@ -59,7 +59,12 @@ async def async_setup_entry(
     gateway = entry.runtime_data.gateway
     for subentry_id, definition in entry.runtime_data.units.items():
         # Package K adds its scene and broadcast entities here from
-        # light_scene_broadcast.py.
+        # light_scene_broadcast.py. Imported inside the function because that
+        # module imports CasambiLight from here.
+        from .light_scene_broadcast import build_scene_broadcast_lights
+
+        if extra := build_scene_broadcast_lights(gateway, definition):
+            async_add_entities(extra, config_subentry_id=subentry_id)
         if entities := build_lights(gateway, definition):
             async_add_entities(entities, config_subentry_id=subentry_id)
 
