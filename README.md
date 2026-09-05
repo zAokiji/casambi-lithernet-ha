@@ -39,9 +39,9 @@ Gateway-Weboberfläche.
 
 ### Control System → MQTT
 
-| Feld | Wert für diese Anlage | Erklärung |
+| Feld | Beispielwert | Erklärung |
 |---|---|---|
-| MQTT IP | Adresse des Brokers, z. B. 192.0.2.20 | Adresse des MQTT-Brokers, zum Beispiel des Mosquitto-Add-ons auf Home Assistant. |
+| MQTT IP | Adresse des Brokers im eigenen Netz | Adresse des MQTT-Brokers, zum Beispiel des Mosquitto-Add-ons auf Home Assistant. |
 | Port | 1883 | Standard, unverschlüsselt im LAN. |
 | Benutzer / Passwort | Ein auf dem Broker angelegter Benutzer | Muss ein in Mosquitto angelegter Benutzer sein. |
 | Bridge ID | 0 | Wird Teil jedes MQTT-Topics. |
@@ -62,7 +62,7 @@ Quellen aus geschieht.
 | `inactive` | Gateway sendet keinerlei Zustände. Befehle funktionieren, Home Assistant bleibt blind. | – | Nicht verwenden |
 | `active` | Gateway fragt alle Units im Poll-Bereich zyklisch ab und publiziert die Antworten. | ca. 7 s bei Poll-Bereich 1–30 | Nur wenn passiv nicht verfügbar |
 | `passive` | Units melden Änderungen per Notification, werden dann abgefragt. Keine zyklische Abfrage der Units. | schnell | Nur wenn `passive_37_80` nicht verfügbar |
-| `passive_37_80` | Wie `passive`, zusätzlich werden die Units in ruhigen Zeiten nacheinander zyklisch abgefragt. | ca. 0,16 s | Standard für diese Anlage |
+| `passive_37_80` | Wie `passive`, zusätzlich werden die Units in ruhigen Zeiten nacheinander zyklisch abgefragt. | ca. 0,16 s | Empfohlen |
 | `passive_37_90` | Nur Notifications, keine aktive Abfrage der Units mehr. Setzt Casambi-Evolution-Firmware ≥ 37.90 im Netz voraus. | schnell | Erst nach Firmware-Prüfung |
 | `passive_39_52` | Wie 37_90 mit weiteren Notification-Typen. Setzt Evolution ≥ 39.52 voraus. | schnell | Erst nach Firmware-Prüfung |
 
@@ -140,6 +140,8 @@ sich die weiteren Felder nach diesem Typ.
 | Unit mit mehreren DALI-Treibern | Eine Casambi-Unit mit mehreren Dimmern, z. B. mehrere Lichtlinien an einem Gerät | Unit-ID | Einzelne Treiber werden blind bedient, eine optionale Gesamt-Entität kann den gemeldeten Mischwert anzeigen |
 | Casambi-Gruppe | Eine in der Casambi-App angelegte Gruppe | Gruppen-ID | Wird zurückgemeldet |
 | Schaltausgang | Reiner Ein/Aus-Ausgang, z. B. ein Lüfter | Unit-ID | Wird zurückgemeldet |
+| Casambi-Szene | Ruft eine in der Casambi-App angelegte Szene auf | Szenen-ID | Wird zurückgemeldet, das Gateway meldet, ob die Szene aktiv ist |
+| Alle Leuchten (Broadcast) | Setzt mit einem Befehl jede Leuchte im Netz | Keine Adresse | Mittelwert über das Netz, wird deshalb blind bedient |
 
 ### Dimmbare Leuchte
 
@@ -180,6 +182,20 @@ nur ein und aus, kein Dimmen. Sie kann als `fan`-Entität oder als
 einige Minuten weiterlaufen", gehört bewusst nicht in die Integration,
 sondern in eine Home-Assistant-Automation.
 
+### Casambi-Szene
+
+Ruft eine in der Casambi-App angelegte Szene auf und wird als `light`-Entität
+mit Helligkeit angelegt, weil das Gateway zurückmeldet, ob die Szene aktiv
+ist. Die Szene muss vorher in der Casambi-App angelegt werden, die
+Integration kann selbst keine Szenen anlegen.
+
+### Alle Leuchten (Broadcast)
+
+Setzt mit einem einzigen Funkbefehl jede Leuchte im Netz gleichzeitig und
+wird als `light`-Entität mit Helligkeit angelegt. Die gemeldete Helligkeit
+ist ein Mittelwert über das gesamte Netz und wird deshalb blind bedient.
+Dieser Typ eignet sich besonders als „Alles aus".
+
 ![Elementtypen anlegen](docs/images/03-elementtypen.png)
 
 ## Diagnose
@@ -206,6 +222,10 @@ ob ein Timer, eine Automation oder eine Person dafür verantwortlich war.
 - **Keine Einzelzustände bei Units mit mehreren Treibern.** Das Gateway
   meldet für eine Unit mit mehreren DALI-Treibern nur einen Mischwert für
   die gesamte Unit. Einzelne Treiber-Entitäten laufen deshalb blind.
+- **Casambi-Gruppen und Szenen werden immer zyklisch abgefragt.** Anders
+  als einzelne Leuchten werden Gruppen und Szenen in jedem Polling-Modus,
+  auch den passiven, weiterhin zyklisch abgefragt, weil Casambi dafür keine
+  Notifications kennt.
 - **Sensoren und Taster brauchen neuere Casambi-Firmware.** Präsenzmelder,
   Helligkeitssensoren und Taster, die über Casambi eingebunden sind, setzen
   eine neuere Casambi-Evolution-Firmware auf den Leuchten voraus und sind
