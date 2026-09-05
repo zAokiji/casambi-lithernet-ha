@@ -1,20 +1,28 @@
 """Package E: the shared entity base class.
 
-The fake gateway defined here is also used by ``test_light.py``; it implements
-the contract from ``contracts.py`` in memory, records every command and lets a
-test push state as if the gateway had published it.
+The fake gateway and the payload helpers moved to ``fake_gateway.py`` (package
+H) so that no test module has to import from another test module any more. They
+are re-exported here unchanged, because ``test_light.py``,
+``test_switch_fan.py``, ``test_diagnostics_entities.py`` and
+``test_scene_broadcast.py`` import them from this module.
 """
 
 from __future__ import annotations
 
-import json
-from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
-from unittest.mock import patch
 
 import pytest
+from fake_gateway import (
+    Command,
+    FakeGateway,
+    group_values_from,
+    make_setup_units,
+    scene_values_from,
+    unit_properties_from,
+    unit_values_from,
+)
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -28,319 +36,20 @@ from custom_components.casambi_lithernet.const import (
     DOMAIN,
     STATE_CONFIRM_TIMEOUT,
     PollingMethod,
-    TargetType,
     UnitKind,
 )
-from custom_components.casambi_lithernet.contracts import (
-    AggregateCallback,
-    AvailabilityCallback,
-    CaptureResult,
-    CasambiGateway,
-    GatewayDiagnostics,
-    SceneCallback,
-    UnitPropertiesCallback,
-    UnitValuesCallback,
-    Unsubscribe,
-)
-from custom_components.casambi_lithernet.models import GatewayConfig, UnitDefinition
-from custom_components.casambi_lithernet.state import (
-    AggregateValues,
-    SceneValues,
-    UnitProperties,
-    UnitValues,
-)
+from custom_components.casambi_lithernet.models import UnitDefinition
 
-
-@dataclass(frozen=True)
-class Command:
-    """One command the entity asked the gateway to send."""
-
-    kind: str
-    target_type: TargetType | None
-    target_id: int
-    value: int
-    duration_ms: int | None
-    index: int | None = None
-
-
-class FakeGateway(CasambiGateway):
-    """In memory stand-in for the real gateway of package B."""
-
-    def __init__(self, config: GatewayConfig) -> None:
-        """Start with no state, no subscribers and a connected broker."""
-        self.config = config
-        self.commands: list[Command] = []
-        self._available = True
-        self._unit_values: dict[int, UnitValues] = {}
-        self._unit_properties: dict[int, UnitProperties] = {}
-        self._group_values: dict[int, AggregateValues] = {}
-        self._scene_values: dict[int, SceneValues] = {}
-        self._broadcast: AggregateValues | None = None
-        self._availability_subs: list[AvailabilityCallback] = []
-        self._unit_subs: dict[int, list[UnitValuesCallback]] = {}
-        self._property_subs: dict[int, list[UnitPropertiesCallback]] = {}
-        self._group_subs: dict[int, list[AggregateCallback]] = {}
-        self._scene_subs: dict[int, list[SceneCallback]] = {}
-        self._broadcast_subs: list[AggregateCallback] = []
-
-    # ------------------------------------------------------------ helpers --
-
-    @property
-    def levels(self) -> list[int]:
-        """Levels of the ``target_level`` commands, in order."""
-        return [c.value for c in self.commands if c.kind == "level"]
-
-    def push_unit_values(self, unit_id: int, values: UnitValues) -> None:
-        """Deliver a values message to every subscriber."""
-        self._unit_values[unit_id] = values
-        for callback in list(self._unit_subs.get(unit_id, ())):
-            callback(values)
-
-    def push_unit_properties(self, unit_id: int, properties: UnitProperties) -> None:
-        """Deliver a propertys message to every subscriber."""
-        self._unit_properties[unit_id] = properties
-        for callback in list(self._property_subs.get(unit_id, ())):
-            callback(properties)
-
-    def push_group_values(self, group_id: int, values: AggregateValues) -> None:
-        """Deliver a group message to every subscriber."""
-        self._group_values[group_id] = values
-        for callback in list(self._group_subs.get(group_id, ())):
-            callback(values)
-
-    def set_available(self, available: bool) -> None:
-        """Report a broker connection change."""
-        self._available = available
-        for callback in list(self._availability_subs):
-            callback(available)
-
-    def seed_unit_values(self, unit_id: int, values: UnitValues) -> None:
-        """Pretend a retained message was already on the broker."""
-        self._unit_values[unit_id] = values
-
-    def seed_unit_properties(self, unit_id: int, properties: UnitProperties) -> None:
-        """Pretend a retained propertys message was already on the broker."""
-        self._unit_properties[unit_id] = properties
-
-    # ---------------------------------------------------------- lifecycle --
-
-    async def async_start(self) -> None:
-        """Nothing to attach to."""
-        return None
-
-    async def async_stop(self) -> None:
-        """Nothing to detach."""
-        return None
-
-    @property
-    def available(self) -> bool:
-        """Whether the fake broker is connected."""
-        return self._available
-
-    def subscribe_availability(self, callback: AvailabilityCallback) -> Unsubscribe:
-        """Watch the fake broker connection."""
-        return _append(self._availability_subs, callback)
-
-    # ----------------------------------------------------------- commands --
-
-    async def async_set_level(
-        self,
-        target_type: TargetType,
-        target_id: int,
-        level: int,
-        duration_ms: int | None = None,
-    ) -> None:
-        """Record a level command."""
-        self.commands.append(
-            Command("level", target_type, target_id, level, duration_ms)
-        )
-
-    async def async_set_tc(
-        self,
-        target_type: TargetType,
-        target_id: int,
-        tc: int,
-        duration_ms: int | None = None,
-    ) -> None:
-        """Record a colour temperature command."""
-        self.commands.append(Command("tc", target_type, target_id, tc, duration_ms))
-
-    async def async_set_dimmer(
-        self,
-        target_id: int,
-        dimmer_index: int,
-        value: int,
-        duration_ms: int | None = None,
-    ) -> None:
-        """Record a dimmer command."""
-        self.commands.append(
-            Command("dimmer", None, target_id, value, duration_ms, dimmer_index)
-        )
-
-    async def async_set_scene_level(
-        self, scene_id: int, level: int, duration_ms: int | None = None
-    ) -> None:
-        """Record a scene command."""
-        self.commands.append(Command("scene", None, scene_id, level, duration_ms))
-
-    async def async_set_broadcast_level(
-        self, level: int, duration_ms: int | None = None
-    ) -> None:
-        """Record a broadcast command."""
-        self.commands.append(Command("broadcast", None, 0, level, duration_ms))
-
-    # ------------------------------------------------------ subscriptions --
-
-    def subscribe_unit(self, unit_id: int, callback: UnitValuesCallback) -> Unsubscribe:
-        """Watch a unit's values."""
-        return _append(self._unit_subs.setdefault(unit_id, []), callback)
-
-    def subscribe_unit_properties(
-        self, unit_id: int, callback: UnitPropertiesCallback
-    ) -> Unsubscribe:
-        """Watch a unit's properties."""
-        return _append(self._property_subs.setdefault(unit_id, []), callback)
-
-    def subscribe_group(
-        self, group_id: int, callback: AggregateCallback
-    ) -> Unsubscribe:
-        """Watch a group."""
-        return _append(self._group_subs.setdefault(group_id, []), callback)
-
-    def subscribe_scene(self, scene_id: int, callback: SceneCallback) -> Unsubscribe:
-        """Watch a scene."""
-        return _append(self._scene_subs.setdefault(scene_id, []), callback)
-
-    def subscribe_broadcast(self, callback: AggregateCallback) -> Unsubscribe:
-        """Watch the broadcast topic."""
-        return _append(self._broadcast_subs, callback)
-
-    # -------------------------------------------------- last known state --
-
-    def unit_values(self, unit_id: int) -> UnitValues | None:
-        """Last known values of a unit."""
-        return self._unit_values.get(unit_id)
-
-    def unit_properties(self, unit_id: int) -> UnitProperties | None:
-        """Last known properties of a unit."""
-        return self._unit_properties.get(unit_id)
-
-    def group_values(self, group_id: int) -> AggregateValues | None:
-        """Last known values of a group."""
-        return self._group_values.get(group_id)
-
-    def scene_values(self, scene_id: int) -> SceneValues | None:
-        """Last known values of a scene."""
-        return self._scene_values.get(scene_id)
-
-    def broadcast_values(self) -> AggregateValues | None:
-        """Last known broadcast values."""
-        return self._broadcast
-
-    # ------------------------------------------------------ verification --
-
-    async def async_blink_test(self, unit_id: int, seconds: float = 2.0) -> None:
-        """Do nothing visible."""
-        return None
-
-    async def async_capture(self, seconds: float) -> CaptureResult:
-        """Report an empty capture."""
-        return CaptureResult(seconds=seconds, message_count=0)
-
-    def diagnostics(self) -> GatewayDiagnostics:
-        """Report empty diagnostics."""
-        return GatewayDiagnostics()
-
-
-def _append(target: list[Any], callback: Any) -> Unsubscribe:
-    """Add a subscriber and return the matching unsubscribe."""
-    target.append(callback)
-
-    def _remove() -> None:
-        if callback in target:
-            target.remove(callback)
-
-    return _remove
-
-
-# ---------------------------------------------------------------- helpers --
-
-
-def unit_values_from(raw: str) -> UnitValues:
-    """Build a state object from a recorded ``values`` payload."""
-    data = json.loads(raw)
-    return UnitValues(
-        level=data["level"],
-        last_level=data["last_level"],
-        cct_level=data["cct_level"],
-        scene=data["scene"],
-        vertical=data["vertical"],
-        last_change=data["last_change"],
-    )
-
-
-def unit_properties_from(raw: str) -> UnitProperties:
-    """Build a properties object from a recorded ``propertys`` payload."""
-    data = json.loads(raw)
-    return UnitProperties(
-        online=bool(data["online"]),
-        node_type=data["node_type"],
-        priority_raw=data["priority"],
-        condition_raw=data["condition"],
-        ambient_temperature=data["ambient_temperatur"],
-        battery_level=data["battery_level"],
-        overheating=data["overheating"],
-        general_failure=data["general_failure"],
-        last_change=data["last_change"],
-    )
-
-
-def group_values_from(raw: str) -> AggregateValues:
-    """Build an aggregate state object from a recorded group payload."""
-    data = json.loads(raw)
-    return AggregateValues(
-        level=data["level"],
-        last_level=data["last_level"],
-        cct_level=data["cct_level"],
-        vertical=data["vertical"],
-        last_change=data["last_change"],
-    )
-
-
-def make_setup_units(
-    hass: HomeAssistant, make_entry: Callable[..., MockConfigEntry]
-) -> Callable[..., Any]:
-    """Build the helper behind the ``setup_units`` fixture.
-
-    ``test_light.py`` declares its own fixture over this function, which keeps
-    the fixture out of the import list and pytest happy.
-    """
-
-    async def _setup(
-        units: Iterable[UnitDefinition],
-        *,
-        prepare: Callable[[FakeGateway], None] | None = None,
-        **entry_kwargs: Any,
-    ) -> tuple[MockConfigEntry, FakeGateway]:
-        created: list[FakeGateway] = []
-
-        def _create(_hass: HomeAssistant, config: GatewayConfig) -> FakeGateway:
-            gateway = FakeGateway(config)
-            if prepare is not None:
-                prepare(gateway)
-            created.append(gateway)
-            return gateway
-
-        entry = make_entry(units=[unit.to_dict() for unit in units], **entry_kwargs)
-        entry.add_to_hass(hass)
-        with patch(
-            "custom_components.casambi_lithernet.create_gateway", side_effect=_create
-        ):
-            await hass.config_entries.async_setup(entry.entry_id)
-            await hass.async_block_till_done()
-        return entry, created[0]
-
-    return _setup
+#: Re-exported for the test modules that still import them from here.
+__all__ = [
+    "Command",
+    "FakeGateway",
+    "group_values_from",
+    "make_setup_units",
+    "scene_values_from",
+    "unit_properties_from",
+    "unit_values_from",
+]
 
 
 @pytest.fixture
