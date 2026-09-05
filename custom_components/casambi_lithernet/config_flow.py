@@ -175,9 +175,36 @@ def capture_placeholders(result: CaptureResult) -> dict[str, str]:
     }
 
 
+def broker_note(broker: str) -> str:
+    """Warn when the broker address only resolves inside Home Assistant.
+
+    With the Mosquitto add-on the MQTT integration connects to a hostname such
+    as ``core-mosquitto``, which exists only inside Home Assistant. The Casambi
+    gateway is a separate device on the network and cannot resolve it, so
+    repeating that name in the setup text would send the user down a dead end.
+    """
+    if "." in broker or broker == UNKNOWN_BROKER:
+        return ""
+    return (
+        f" `{broker}` ist ein Name, den nur Home Assistant selbst auflöst. "
+        "Trage im Gateway stattdessen die IP-Adresse des Rechners ein, auf dem "
+        "Home Assistant läuft."
+    )
+
+
+#: How many Casambi addresses the capture result lists before it counts the
+#: rest. A gateway polls its whole address range, so the raw list runs to two
+#: hundred entries and buries everything after it.
+MAX_LISTED_IDS: Final = 12
+
+
 def _ids(values: tuple[int, ...]) -> str:
     """Render a list of Casambi addresses, or a dash when there was none."""
-    return ", ".join(str(value) for value in values) if values else NOTHING
+    if not values:
+        return NOTHING
+    shown = ", ".join(str(value) for value in values[:MAX_LISTED_IDS])
+    rest = len(values) - MAX_LISTED_IDS
+    return shown if rest <= 0 else f"{shown} und {rest} weitere"
 
 
 def _seen(value: bool) -> str:
@@ -545,7 +572,11 @@ class CasambiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _broker_placeholders(self) -> dict[str, str]:
         """Broker address and port, used by several steps."""
-        return {"broker": self._broker, "port": str(self._port)}
+        return {
+            "broker": self._broker,
+            "port": str(self._port),
+            "broker_note": broker_note(self._broker),
+        }
 
 
 # ---------------------------------------------------------- options flow ---

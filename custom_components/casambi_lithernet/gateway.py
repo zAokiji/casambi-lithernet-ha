@@ -290,16 +290,19 @@ class MqttCasambiGateway(CasambiGateway):
     async def async_blink_test(self, unit_id: int, seconds: float = 2.0) -> None:
         """Switch a unit to full brightness, wait, then switch it off.
 
-        The switching off happens even when the wait is cancelled, for example
-        because the user closed the setup dialog. Otherwise the luminaire the
-        user picked for the test would be left at full brightness with nothing
-        to tell them why.
+        Whatever the luminaire was doing before is restored afterwards, so a
+        test on a lamp that happened to be on does not leave the room dark. The
+        restore also runs when the wait is cancelled, for example because the
+        user closed the setup dialog; otherwise the luminaire would be left at
+        full brightness with nothing to tell them why.
         """
+        before = self.unit_values(unit_id)
+        restore = before.level if before is not None else LEVEL_MIN
         await self.async_set_level(TargetType.UNIT, unit_id, LEVEL_MAX)
         try:
             await asyncio.sleep(seconds)
         finally:
-            await self.async_set_level(TargetType.UNIT, unit_id, LEVEL_MIN)
+            await self.async_set_level(TargetType.UNIT, unit_id, restore)
 
     async def async_capture(self, seconds: float) -> CaptureResult:
         """Listen to every gateway topic for a while and summarise what came."""

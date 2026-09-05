@@ -3,11 +3,11 @@
     "step": {
       "user": {
         "title": "Casambi-Gateway",
-        "description": "Diese Integration spricht deine Casambi-Leuchten über ein Lithernet-Gateway per MQTT an.\n\nDer MQTT-Broker, den Home Assistant verwendet, ist `{broker}` auf Port `{port}`. Notiere dir das, du trägst es im nächsten Schritt im Gateway ein.\n\nDie Integration verbindet sich nie mit der Weboberfläche des Gateways. Die Einstellungen dort nimmst du selbst vor, dieser Assistent prüft danach, ob alles ankommt."
+        "description": "Diese Integration spricht deine Casambi-Leuchten über ein Lithernet-Gateway per MQTT an.\n\nDer MQTT-Broker, den Home Assistant verwendet, ist `{broker}` auf Port `{port}`.{broker_note} Notiere dir das, du trägst es im nächsten Schritt im Gateway ein.\n\nDie Integration verbindet sich nie mit der Weboberfläche des Gateways. Die Einstellungen dort nimmst du selbst vor, dieser Assistent prüft danach, ob alles ankommt."
       },
       "gateway": {
         "title": "Gateway mit MQTT verbinden",
-        "description": "Öffne die Weboberfläche des Gateways und gehe auf Control System.\n\nTrage unter **MQTT IP** die Broker-Adresse `{broker}` und den Port `{port}` ein, dazu einen Benutzer, den es auf deinem Broker gibt.\n\n**Achtung, zwei ähnliche Felder:** `IP-Settings` ist die Adresse des Gateways selbst. Der Broker gehört unter `Control System`. Eine Verwechslung erzeugt einen Adresskonflikt.\n\nDie Bridge-ID wird Teil jedes Topics und ist in den meisten Anlagen 0.",
+        "description": "Öffne die Weboberfläche des Gateways und gehe auf Control System.\n\nTrage unter **MQTT IP** die Broker-Adresse `{broker}` und den Port `{port}` ein, dazu einen Benutzer, den es auf deinem Broker gibt.{broker_note}\n\n**Achtung, zwei ähnliche Felder:** `IP-Settings` ist die Adresse des Gateways selbst. Der Broker gehört unter `Control System`. Eine Verwechslung erzeugt einen Adresskonflikt.\n\nDie Bridge-ID wird Teil jedes Topics und ist in den meisten Anlagen 0.",
         "data": {
           "gateway_host": "Adresse des Gateways",
           "bridge_id": "Bridge-ID"

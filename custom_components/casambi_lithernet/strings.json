@@ -3,11 +3,11 @@
     "step": {
       "user": {
         "title": "Casambi gateway",
-        "description": "This integration talks to your Casambi luminaires through a Lithernet gateway over MQTT.\n\nThe MQTT broker Home Assistant uses is `{broker}` on port `{port}`. Note it down, you will enter it in the gateway in the next step.\n\nThe integration never connects to the gateway's web interface. You make the settings there yourself, and this wizard checks afterwards that everything arrives."
+        "description": "This integration talks to your Casambi luminaires through a Lithernet gateway over MQTT.\n\nThe MQTT broker Home Assistant uses is `{broker}` on port `{port}`.{broker_note} Note it down, you will enter it in the gateway in the next step.\n\nThe integration never connects to the gateway's web interface. You make the settings there yourself, and this wizard checks afterwards that everything arrives."
       },
       "gateway": {
         "title": "Connect the gateway to MQTT",
-        "description": "Open the gateway's web interface and go to Control System.\n\nEnter the broker address `{broker}` and port `{port}` under **MQTT IP**, plus a user that exists on your broker.\n\n**Careful, two similar fields:** `IP-Settings` is the gateway's own address. The broker belongs under `Control System`. Mixing them up creates an address conflict.\n\nThe bridge ID becomes part of every topic and is 0 in most installations.",
+        "description": "Open the gateway's web interface and go to Control System.\n\nEnter the broker address `{broker}` and port `{port}` under **MQTT IP**, plus a user that exists on your broker.{broker_note}\n\n**Careful, two similar fields:** `IP-Settings` is the gateway's own address. The broker belongs under `Control System`. Mixing them up creates an address conflict.\n\nThe bridge ID becomes part of every topic and is 0 in most installations.",
         "data": {
           "gateway_host": "Gateway address",
           "bridge_id": "Bridge ID"

@@ -172,9 +172,33 @@ async def test_prerequisites_show_the_broker(
     """Broker address and port reach the texts of the first steps."""
     result = await _start(hass)
     placeholders = result["description_placeholders"]
-    assert set(placeholders) == {"broker", "port"}
+    assert set(placeholders) == {"broker", "port", "broker_note"}
     result = await _configure(hass, result["flow_id"])
-    assert set(result["description_placeholders"]) == {"broker", "port"}
+    assert set(result["description_placeholders"]) == {"broker", "port", "broker_note"}
+
+
+@pytest.mark.parametrize(
+    ("broker", "expect_note"),
+    [
+        ("core-mosquitto", True),
+        ("mosquitto", True),
+        ("192.0.2.20", False),
+        ("broker.example.org", False),
+    ],
+)
+def test_broker_note_warns_about_names_only_home_assistant_resolves(
+    broker: str, expect_note: bool
+) -> None:
+    """An add-on hostname is a dead end for a device on the network.
+
+    The Casambi gateway has to reach the broker itself. Repeating a name like
+    ``core-mosquitto`` at it would look right and never connect, which is
+    exactly the failure the blink test then reports without an explanation.
+    """
+    note = config_flow.broker_note(broker)
+    assert bool(note) is expect_note
+    if expect_note:
+        assert "IP-Adresse" in note
 
 
 # ------------------------------------------------------------- aborting --
