@@ -94,6 +94,11 @@ BRIDGE_ID_MAX: Final = 255
 UNKNOWN_BROKER: Final = "?"
 DEFAULT_MQTT_PORT: Final = 1883
 
+#: Shown where a value was not seen at all; never a word, so it needs no
+#: translation. The tick marks the opposite.
+NOTHING: Final = "\u2013"
+SEEN: Final = "\u2713"
+
 KELVIN_FORM_MIN: Final = 1000
 KELVIN_FORM_MAX: Final = 10000
 DURATION_FORM_MAX: Final = 60000
@@ -143,36 +148,41 @@ async def async_temporary_gateway(
         await gateway.async_stop()
 
 
-def format_capture(result: CaptureResult) -> str:
-    """Turn a capture into the text shown as ``{summary}``.
+def capture_placeholders(result: CaptureResult) -> dict[str, str]:
+    """Turn a capture into the placeholders of the result texts.
+
+    Every value goes into the translations as its own placeholder, so the
+    sentence around it can be written in each language. Nothing here is a
+    translatable word: numbers, addresses, topic kinds, and a tick or a dash
+    for "was seen" and "was not seen".
 
     The topic kinds come from package B already normalised
-    (``poll_device/<id>/values``) and are shown verbatim; this function must not
-    take them apart. Whether ``poll_devicet`` and ``poll_button`` were seen is
-    stated explicitly, because sensors and buttons of a later version depend on
-    it. The reference installation saw 560 messages in 37 seconds and neither
-    of the two.
+    (``poll_device/<id>/values``) and are passed on verbatim; this function must
+    not take them apart. Whether ``poll_devicet`` and ``poll_button`` arrived is
+    reported separately, because the sensors and buttons of a later version
+    depend on it. The reference installation saw 560 messages in 37 seconds and
+    neither of the two.
     """
-    lines = [
-        f"**{result.message_count}** messages in {result.seconds:g} s.",
-        "",
-        f"- Units: {_ids(result.unit_ids)}",
-        f"- Groups: {_ids(result.group_ids)}",
-        f"- Scenes: {_ids(result.scene_ids)}",
-        f"- Topics: {', '.join(result.topic_kinds) if result.topic_kinds else '-'}",
-        f"- Device elements (`poll_devicet`): {_yes_no(result.saw_device_elements)}",
-        f"- Buttons (`poll_button`): {_yes_no(result.saw_buttons)}",
-    ]
-    return "\n".join(lines)
+    return {
+        "count": str(result.message_count),
+        "seconds": f"{result.seconds:g}",
+        "units": _ids(result.unit_ids),
+        "groups": _ids(result.group_ids),
+        "scenes": _ids(result.scene_ids),
+        "topics": ", ".join(result.topic_kinds) if result.topic_kinds else NOTHING,
+        "devicet": _seen(result.saw_device_elements),
+        "buttons": _seen(result.saw_buttons),
+    }
 
 
 def _ids(values: tuple[int, ...]) -> str:
     """Render a list of Casambi addresses, or a dash when there was none."""
-    return ", ".join(str(value) for value in values) if values else "-"
+    return ", ".join(str(value) for value in values) if values else NOTHING
 
 
-def _yes_no(value: bool) -> str:
-    return "yes" if value else "no"
+def _seen(value: bool) -> str:
+    """Render a yes or no without using a word of any language."""
+    return SEEN if value else NOTHING
 
 
 def _settings_schema(config: GatewayConfig) -> vol.Schema:
@@ -228,7 +238,7 @@ class CasambiConfigFlow(ConfigFlow, domain=DOMAIN):
         self._broker: str = UNKNOWN_BROKER
         self._port: int = DEFAULT_MQTT_PORT
         self._test_unit_id: int | None = None
-        self._summary = ""
+        self._capture: dict[str, str] = {}
         self._active_gateway: CasambiGateway | None = None
 
     @classmethod
@@ -447,7 +457,17 @@ class CasambiConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_verify_state(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Listen to the gateway and report what arrived."""
+        """Listen to the gateway and report what arrived.
+
+        With polling method ``inactive`` the gateway sends nothing by design,
+        so there is nothing to listen for (project document section 5): the
+        check is skipped and the consequence explained instead. The guard sits
+        here rather than at the call sites, so every way into the state check
+        passes it.
+        """
+        if self._polling_is_inactive():
+            return await self.async_step_polling_inactive()
+
         if user_input is None:
             return self.async_show_form(
                 step_id="verify_state",
@@ -456,7 +476,7 @@ class CasambiConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         result = await self._async_capture()
-        self._summary = format_capture(result)
+        self._capture = capture_placeholders(result)
         if not result.saw_any_state:
             return await self.async_step_no_state()
         return await self.async_step_verify_state_result()
@@ -468,7 +488,7 @@ class CasambiConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_menu(
             step_id="verify_state_result",
             menu_options=["finish", "verify_state"],
-            description_placeholders={"summary": self._summary},
+            description_placeholders=self._capture,
         )
 
     async def async_step_no_state(
@@ -476,7 +496,17 @@ class CasambiConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Nothing arrived: point at the polling method, offer both ways on."""
         return self.async_show_menu(
-            step_id="no_state", menu_options=["verify_state", "finish"]
+            step_id="no_state",
+            menu_options=["verify_state", "finish"],
+            description_placeholders=self._capture,
+        )
+
+    async def async_step_polling_inactive(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Explain what "inactive" costs and offer to change it."""
+        return self.async_show_menu(
+            step_id="polling_inactive", menu_options=["finish", "polling"]
         )
 
     async def _async_capture(self) -> CaptureResult:
@@ -509,6 +539,10 @@ class CasambiConfigFlow(ConfigFlow, domain=DOMAIN):
         """Build the configuration from what has been collected so far."""
         return GatewayConfig.from_dict(self._data)
 
+    def _polling_is_inactive(self) -> bool:
+        """Whether the user said the gateway reports no state at all."""
+        return self._config().polling_method is PollingMethod.INACTIVE
+
     def _broker_placeholders(self) -> dict[str, str]:
         """Broker address and port, used by several steps."""
         return {"broker": self._broker, "port": str(self._port)}
@@ -522,7 +556,7 @@ class CasambiOptionsFlow(OptionsFlow):
 
     def __init__(self) -> None:
         """Start without a capture result."""
-        self._summary = ""
+        self._capture: dict[str, str] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -568,7 +602,7 @@ class CasambiOptionsFlow(OptionsFlow):
             _LOGGER.exception("State capture failed")
             result = CaptureResult(seconds=CAPTURE_SECONDS, message_count=0)
 
-        self._summary = format_capture(result)
+        self._capture = capture_placeholders(result)
         return await self.async_step_verify_result()
 
     async def async_step_verify_result(
@@ -579,7 +613,7 @@ class CasambiOptionsFlow(OptionsFlow):
             return self.async_show_form(
                 step_id="verify_result",
                 data_schema=vol.Schema({}),
-                description_placeholders={"summary": self._summary},
+                description_placeholders=self._capture,
             )
         return self.async_create_entry(data=dict(self.config_entry.options))
 
