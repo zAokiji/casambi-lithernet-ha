@@ -189,11 +189,6 @@ class UnitDefinition:
         """Whether the gateway publishes ``propertys`` for this element."""
         return self.kind in UNIT_ADDRESSED_KINDS
 
-    @property
-    def is_multi_dimmer(self) -> bool:
-        """Whether this element produces one entity per DALI dimmer."""
-        return self.kind is UnitKind.MULTI_DALI
-
     # ------------------------------------------------------------ storage --
 
     @classmethod

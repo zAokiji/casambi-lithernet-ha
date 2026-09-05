@@ -1,26 +1,28 @@
 """Package K: scenes and the whole network as light entities.
 
-The fake gateway and the ``setup_units`` helper come from ``test_entity.py``.
-It has no push helpers for scenes and broadcast yet, so the two small ones
-below drive its subscriber lists directly.
+The fake gateway, the payload converters and ``setup_units`` come from
+``fake_gateway.py``.
 """
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 from typing import Any
 
 import pytest
+from fake_gateway import (
+    FakeGateway,
+    group_values_from,
+    make_setup_units,
+    scene_values_from,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from test_entity import FakeGateway, group_values_from, make_setup_units
 
 from custom_components.casambi_lithernet.const import DOMAIN, UnitKind
 from custom_components.casambi_lithernet.models import UnitDefinition
-from custom_components.casambi_lithernet.state import AggregateValues, SceneValues
 
 
 @pytest.fixture
@@ -33,30 +35,6 @@ def setup_units(
 
 SCENE = UnitDefinition(kind=UnitKind.SCENE, name="Abendlicht", target_id=3)
 BROADCAST = UnitDefinition(kind=UnitKind.BROADCAST, name="Alle Leuchten")
-
-
-def scene_values_from(raw: str) -> SceneValues:
-    """Build a scene state object from a recorded ``poll_scene`` payload."""
-    data = json.loads(raw)
-    return SceneValues(
-        active=bool(data["active"]),
-        level=data["level"],
-        last_change=data["last_change"],
-    )
-
-
-def push_scene(gateway: FakeGateway, scene_id: int, values: SceneValues) -> None:
-    """Deliver a scene message to every subscriber of the fake gateway."""
-    gateway._scene_values[scene_id] = values
-    for callback in list(gateway._scene_subs.get(scene_id, ())):
-        callback(values)
-
-
-def push_broadcast(gateway: FakeGateway, values: AggregateValues) -> None:
-    """Deliver a broadcast message to every subscriber of the fake gateway."""
-    gateway._broadcast = values
-    for callback in list(gateway._broadcast_subs):
-        callback(values)
 
 
 # ------------------------------------------------------------------ scene --
@@ -112,7 +90,7 @@ async def test_active_scene_fixture_is_on(
 ) -> None:
     """An active scene with a level shows as on with that brightness."""
     _, gateway = await setup_units([SCENE])
-    push_scene(gateway, 3, scene_values_from(payload("scene_values_active")))
+    gateway.push_scene_values(3, scene_values_from(payload("scene_values_active")))
     await hass.async_block_till_done()
 
     state = hass.states.get("light.abendlicht")
@@ -128,7 +106,7 @@ async def test_inactive_scene_fixture_is_off_despite_level_255(
     values = scene_values_from(payload("scene_values"))
     assert values.level == 255
 
-    push_scene(gateway, 3, values)
+    gateway.push_scene_values(3, values)
     await hass.async_block_till_done()
 
     state = hass.states.get("light.abendlicht")
@@ -142,7 +120,7 @@ async def test_retained_scene_state_is_read_at_startup(
     """A scene state already on the broker renders without a new message."""
 
     def _prepare(gateway: FakeGateway) -> None:
-        gateway._scene_values[3] = scene_values_from(payload("scene_values_active"))
+        gateway.seed_scene_values(3, scene_values_from(payload("scene_values_active")))
 
     await setup_units([SCENE], prepare=_prepare)
     assert hass.states.get("light.abendlicht").state == "on"
@@ -199,7 +177,7 @@ async def test_broadcast_fixture_shows_the_average_as_brightness(
 ) -> None:
     """The average level from ``poll_broadcast`` becomes the brightness."""
     _, gateway = await setup_units([BROADCAST])
-    push_broadcast(gateway, group_values_from(payload("broadcast_values")))
+    gateway.push_broadcast_values(group_values_from(payload("broadcast_values")))
     await hass.async_block_till_done()
 
     state = hass.states.get("light.alle_leuchten")
@@ -213,7 +191,7 @@ async def test_retained_broadcast_state_is_read_at_startup(
     """A broadcast state already on the broker renders right away."""
 
     def _prepare(gateway: FakeGateway) -> None:
-        gateway._broadcast = group_values_from(payload("broadcast_values"))
+        gateway.seed_broadcast_values(group_values_from(payload("broadcast_values")))
 
     await setup_units([BROADCAST], prepare=_prepare)
     assert hass.states.get("light.alle_leuchten").attributes["brightness"] == 31

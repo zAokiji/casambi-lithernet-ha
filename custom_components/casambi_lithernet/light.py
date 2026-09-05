@@ -43,7 +43,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CasambiConfigEntry
-from .const import TargetType, UnitKind
+from .const import UnitKind
 from .contracts import CasambiGateway
 from .entity import CasambiEntity
 from .models import UnitDefinition
@@ -145,7 +145,10 @@ class CasambiUnitLight(CasambiLight):
     async def _async_send_level(self, level: int, duration_ms: int | None) -> None:
         """Set the whole unit."""
         await self._gateway.async_set_level(
-            TargetType.UNIT, self._definition.target_id, level, duration_ms
+            self._definition.target_type,
+            self._definition.target_id,
+            level,
+            duration_ms,
         )
 
     @callback
@@ -195,7 +198,7 @@ class CasambiTunableWhiteLight(CasambiUnitLight):
 
         if kelvin is not None:
             await self._gateway.async_set_tc(
-                TargetType.UNIT,
+                self._definition.target_type,
                 self._definition.target_id,
                 kelvin_to_tc(
                     kelvin, self._definition.min_kelvin, self._definition.max_kelvin
@@ -227,7 +230,10 @@ class CasambiGroupLight(CasambiLight):
     async def _async_send_level(self, level: int, duration_ms: int | None) -> None:
         """Set the whole group."""
         await self._gateway.async_set_level(
-            TargetType.GROUP, self._definition.target_id, level, duration_ms
+            self._definition.target_type,
+            self._definition.target_id,
+            level,
+            duration_ms,
         )
 
     @callback

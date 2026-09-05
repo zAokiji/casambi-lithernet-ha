@@ -35,7 +35,6 @@ from .const import (
     LEVEL_MAX,
     LEVEL_MIN,
     SWITCH_DOMAIN_SWITCH,
-    TargetType,
     UnitKind,
 )
 from .contracts import CasambiGateway
@@ -135,7 +134,7 @@ class CasambiSwitchingEntity(CasambiEntity):
     async def _async_send_level(self, level: int) -> None:
         """Send the one ``target_level`` command that switches the unit."""
         await self._gateway.async_set_level(
-            TargetType.UNIT, self._definition.target_id, level
+            self._definition.target_type, self._definition.target_id, level
         )
 
     async def async_switch_to(self, level: int) -> None:

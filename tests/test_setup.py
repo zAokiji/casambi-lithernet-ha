@@ -6,7 +6,7 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from custom_components.casambi_lithernet.const import UnitKind
+from custom_components.casambi_lithernet.const import TargetType, UnitKind
 from custom_components.casambi_lithernet.models import (
     ConfigurationError,
     GatewayConfig,
@@ -65,3 +65,26 @@ def test_kelvin_conversion_is_reversible() -> None:
     for kelvin in (2700, 3500, 5000, 6500):
         back = tc_to_kelvin(kelvin_to_tc(kelvin, 2700, 6500), 2700, 6500)
         assert abs(back - kelvin) <= 15
+
+
+@pytest.mark.parametrize(
+    ("kind", "expected"),
+    [
+        (UnitKind.SIMPLE, TargetType.UNIT),
+        (UnitKind.TUNABLE_WHITE, TargetType.UNIT),
+        (UnitKind.MULTI_DALI, TargetType.UNIT),
+        (UnitKind.SWITCH, TargetType.UNIT),
+        (UnitKind.GROUP, TargetType.GROUP),
+        (UnitKind.SCENE, TargetType.SCENE_ALL),
+        (UnitKind.BROADCAST, TargetType.BROADCAST),
+    ],
+)
+def test_target_type_per_kind(kind, expected) -> None:
+    """Every kind addresses the gateway through the right target type.
+
+    The platforms read this instead of hardcoding a value, so a wrong entry
+    here would send commands to the wrong address space.
+    """
+    target_id = 0 if kind is UnitKind.BROADCAST else 1
+    unit = UnitDefinition(kind=kind, name="X", target_id=target_id)
+    assert unit.target_type is expected
