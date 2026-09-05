@@ -100,7 +100,11 @@ class CasambiSceneLight(CasambiLight):
 
     @callback
     def _handle_scene(self, values: SceneValues) -> None:
-        """Adopt an incoming scene state and drop the fallback timer."""
+        """Adopt an incoming scene state, unless a command is still pending.
+
+        A scene reports its recall level rather than the level it was called
+        with, so there is nothing to compare; any message counts as the answer.
+        """
         self._state_confirmed()
         self._apply_scene(values)
         self.async_write_ha_state()

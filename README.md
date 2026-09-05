@@ -29,8 +29,6 @@ Die Installation erfolgt über HACS als benutzerdefiniertes Repository:
 3. Home Assistant neu starten.
 4. Die Integration über „Integration hinzufügen" einrichten.
 
-![HACS-Installation](docs/images/00-hacs-installation.png)
-
 ## Einrichtung des Gateways
 
 Bevor die Integration eingerichtet wird, muss das Lithernet-Gateway selbst
@@ -87,8 +85,6 @@ werden im aktiven Modus nicht abgefragt und laufen dann blind.
 | Use Broadcast | `false` | Betrifft BLE-Broadcast, nicht MQTT. Muss aus bleiben. |
 | IP-Settings | Feste Adresse, DHCP inactive | Eigene Adresse des Gateways. Sollte statisch sein, damit die Weboberfläche auffindbar bleibt. |
 
-![Gateway-Einstellungen](docs/images/01-einrichtung-gateway.png)
-
 ## Der Einrichtungsassistent
 
 Beim ersten Einrichten führt der Config Flow Schritt für Schritt durch die
@@ -125,8 +121,6 @@ Gateway-Konfiguration und prüft danach, ob Befehle und Zustände fließen.
 Die Verbindungsprüfung aus Schritt 5 ist auch später über die Optionen des
 Gateway-Eintrags erreichbar, um nach einem Gateway-Update oder einem
 Broker-Wechsel schnell zu testen.
-
-![Einrichtungsassistent, Verbindungsprüfung](docs/images/02-einrichtung-verbindungspruefung.png)
 
 ## Elementtypen
 
@@ -195,8 +189,6 @@ Setzt mit einem einzigen Funkbefehl jede Leuchte im Netz gleichzeitig und
 wird als `light`-Entität mit Helligkeit angelegt. Die gemeldete Helligkeit
 ist ein Mittelwert über das gesamte Netz und wird deshalb blind bedient.
 Dieser Typ eignet sich besonders als „Alles aus".
-
-![Elementtypen anlegen](docs/images/03-elementtypen.png)
 
 ## Diagnose
 

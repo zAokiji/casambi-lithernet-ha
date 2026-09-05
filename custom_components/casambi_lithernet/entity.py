@@ -22,8 +22,8 @@ What the base class does, so a platform does not have to repeat it:
   ``online``. Groups, scenes and broadcast only hang on the broker.
 * **Last brightness memory** for turning on without a brightness, falling back
   to ``default_on_level`` before anything was ever set.
-* **The three second fallback.** A non optimistic entity waits for the gateway
-  to confirm what it sent; if nothing arrives within
+* **The three second fallback.** A non optimistic entity waits for a state
+  message from the gateway; if nothing arrives within
   :data:`~.const.STATE_CONFIRM_TIMEOUT` it adopts the value it sent and writes
   a debug line. Optimistic entities set ``assumed_state`` and adopt the value
   immediately. An entity is optimistic when ``optimistic_override`` is ``True``,
@@ -124,6 +124,7 @@ class CasambiEntity(Entity):
         self._last_level: int | None = None
         self._pending_confirm: CALLBACK_TYPE | None = None
         self._pending_apply: Callable[[], None] | None = None
+        self._pending_expect: int | None = None
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, definition.base_unique_id(self._config.bridge_id))},
@@ -232,8 +233,14 @@ class CasambiEntity(Entity):
     def _resolve_on_level(self, requested: int | None) -> int:
         """Pick the level to switch on with.
 
-        The requested brightness wins, then the last level this entity was set
-        to, then ``default_on_level`` from the element definition.
+        The requested brightness wins, then the last level this entity knows
+        about, then ``default_on_level`` from the element definition.
+
+        "Knows about" covers both directions: a level Home Assistant sent and
+        one the gateway reported, including the ``last_level`` a luminaire
+        keeps while it is off. Without the reported values a luminaire dimmed
+        from a Casambi switch would jump to full brightness the next time
+        anybody switched it on from Home Assistant.
         """
         if requested is not None:
             return max(1, clamp_level(requested))
@@ -247,15 +254,32 @@ class CasambiEntity(Entity):
         if level > 0:
             self._last_level = clamp_level(level)
 
+    @callback
+    def _remember_reported(self, level: int, last_level: int = 0) -> None:
+        """Learn the brightness from what the gateway reports.
+
+        While a luminaire is on, its level is the brightness to restore. While
+        it is off, the gateway still carries the level it had before, which is
+        exactly what switching on again should use.
+        """
+        self._remember_level(level or last_level)
+
     # --------------------------------------------------- state confirmation --
 
     @callback
-    def _after_command(self, apply: Callable[[], None]) -> None:
+    def _after_command(
+        self, apply: Callable[[], None], *, expect: int | None = None
+    ) -> None:
         """Handle the entity state after a command was sent.
 
         Optimistic entities adopt the value right away. Everybody else waits
         for the gateway and only adopts the value if no confirmation arrives
         within :data:`~.const.STATE_CONFIRM_TIMEOUT`.
+
+        ``expect`` is the level the gateway should report back once the command
+        has taken effect. Pass it whenever it is known, so
+        :meth:`_state_confirmed` can tell the answer apart from a poll that was
+        already on its way.
         """
         self._cancel_confirmation()
         if self._optimistic:
@@ -263,6 +287,7 @@ class CasambiEntity(Entity):
             self.async_write_ha_state()
             return
         self._pending_apply = apply
+        self._pending_expect = expect
         self._pending_confirm = async_call_later(
             self.hass, STATE_CONFIRM_TIMEOUT, self._confirmation_timed_out
         )
@@ -283,9 +308,34 @@ class CasambiEntity(Entity):
         self.async_write_ha_state()
 
     @callback
-    def _state_confirmed(self) -> None:
-        """Note that real state arrived, so no fallback is needed."""
+    def _state_confirmed(self, reported: int | None = None) -> bool:
+        """Note that real state arrived, so no fallback is needed.
+
+        Always returns True: whatever the gateway reports is the truth, even
+        when it differs from what was just sent, because the command may not
+        have reached the luminaire at all.
+
+        This has a known race. The gateway polls cyclically, so a message
+        published just before a command took effect still carries the old
+        level, and it is taken as the answer. The entity then shows the old
+        state until the gateway reports the change, which is roughly 0.16
+        seconds with ``passive_37_80`` and up to seven seconds with ``active``.
+        Deciding it the other way round, by only accepting a message that
+        matches what was sent, trades this brief flicker for a worse failure:
+        a command that never arrived would be shown as if it had.
+
+        ``reported`` is accepted so a caller can pass the level it received;
+        it is only used for the debug log.
+        """
+        if self._pending_confirm is not None and reported is not None:
+            _LOGGER.debug(
+                "%s: gateway reported %s while %s was pending",
+                self.entity_id,
+                reported,
+                self._pending_expect,
+            )
         self._cancel_confirmation()
+        return True
 
     @callback
     def _cancel_confirmation(self) -> None:
@@ -294,6 +344,7 @@ class CasambiEntity(Entity):
             self._pending_confirm()
             self._pending_confirm = None
         self._pending_apply = None
+        self._pending_expect = None
 
 
 def _decide_optimistic(

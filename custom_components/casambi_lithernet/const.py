@@ -51,7 +51,9 @@ SUBENTRY_TYPE_UNIT: Final = "unit"
 
 DEFAULT_BRIDGE_ID: Final = 0
 DEFAULT_TOPIC_PREFIX: Final = "casambi"
-DEFAULT_GATEWAY_HOST: Final = "192.0.2.10"
+# Deliberately empty: this is one household's address, not a sensible
+# default for anybody else. The form shows a placeholder instead.
+DEFAULT_GATEWAY_HOST: Final = ""
 DEFAULT_DURATION_MS: Final = 0
 DEFAULT_MIN_KELVIN: Final = 2700
 DEFAULT_MAX_KELVIN: Final = 6500

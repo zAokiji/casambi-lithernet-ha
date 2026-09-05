@@ -197,3 +197,16 @@ async def async_create_fix_flow(
     a ``repairs`` platform without it.
     """
     return ConfirmRepairFlow()
+
+
+@callback
+def async_clear_issues(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Withdraw every issue this entry raised.
+
+    Issue ids carry the entry id, so an entry that gets deleted while one of
+    its issues stands would leave that issue in the repairs panel forever:
+    neither issue is fixable from the panel, and nothing would ever raise the
+    same id again.
+    """
+    async_clear_mqtt_missing(hass, entry)
+    async_clear_no_state(hass, entry)

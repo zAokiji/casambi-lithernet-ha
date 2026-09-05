@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, PLATFORMS, SUBENTRY_TYPE_UNIT
 from .gateway import create_gateway
 from .models import ConfigurationError, GatewayConfig, RuntimeData, UnitDefinition
-from .repairs import async_check_mqtt, async_watch_for_state
+from .repairs import async_check_mqtt, async_clear_issues, async_watch_for_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: CasambiConfigEntry) -> b
         manufacturer=MANUFACTURER,
         model=MODEL,
         name=entry.title,
-        configuration_url=f"http://{config.gateway_host}",
+        configuration_url=(
+            f"http://{config.gateway_host}" if config.gateway_host else None
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -89,3 +91,11 @@ def _read_units(entry: CasambiConfigEntry) -> dict[str, UnitDefinition]:
                 subentry.title,
             )
     return units
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: CasambiConfigEntry) -> None:
+    """Clean up after the user removed the bridge.
+
+    Both repair issues are keyed by the entry id, so they have to go with it.
+    """
+    async_clear_issues(hass, entry)

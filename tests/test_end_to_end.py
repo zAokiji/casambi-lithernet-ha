@@ -780,6 +780,14 @@ async def test_changing_the_driver_count_adds_and_removes_entities(
     hass.config_entries.async_update_subentry(entry, subentry, data=shrunk.to_dict())
     await hass.async_block_till_done()
 
+    # Shrinking has to remove the entities of the drivers that are gone, not
+    # leave them behind as permanently unavailable ones. The same goes for the
+    # total entity that was switched off.
     assert hass.states.get("light.gang_spot_1") is not None
+    registry = er.async_get(hass)
     for gone in ("light.vorraum", "light.spiegellicht", "light.gang_dimmer_5"):
-        assert hass.states.get(gone).state == "unavailable"
+        assert hass.states.get(gone) is None
+        assert registry.async_get(gone) is None
+    assert registry.async_get_entity_id("light", DOMAIN, "casambi_lithernet_0_u16") is (
+        None
+    )

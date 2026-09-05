@@ -38,12 +38,19 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     LightEntity,
 )
-from homeassistant.components.light.const import ColorMode, LightEntityFeature
+from homeassistant.components.light.const import (
+    DOMAIN as LIGHT_DOMAIN,
+)
+from homeassistant.components.light.const import (
+    ColorMode,
+    LightEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CasambiConfigEntry
-from .const import UnitKind
+from .const import DOMAIN, MAX_DIMMER_COUNT, UnitKind
 from .contracts import CasambiGateway
 from .entity import CasambiEntity
 from .models import UnitDefinition
@@ -56,17 +63,46 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the light entities of every configured element."""
+    # Imported here rather than at module level because light_scene_broadcast
+    # imports CasambiLight from this module, which would be a cycle.
+    from .light_scene_broadcast import build_scene_broadcast_lights
+
     gateway = entry.runtime_data.gateway
     for subentry_id, definition in entry.runtime_data.units.items():
-        # Package K adds its scene and broadcast entities here from
-        # light_scene_broadcast.py. Imported inside the function because that
-        # module imports CasambiLight from here.
-        from .light_scene_broadcast import build_scene_broadcast_lights
+        drop_stale_dimmers(hass, gateway, definition)
 
         if extra := build_scene_broadcast_lights(gateway, definition):
             async_add_entities(extra, config_subentry_id=subentry_id)
         if entities := build_lights(gateway, definition):
             async_add_entities(entities, config_subentry_id=subentry_id)
+
+
+def drop_stale_dimmers(
+    hass: HomeAssistant, gateway: CasambiGateway, definition: UnitDefinition
+) -> None:
+    """Remove registry entries of drivers this element no longer has.
+
+    Lowering the driver count of a unit, or switching its total entity off,
+    leaves unique ids that nobody claims any more. Home Assistant would keep
+    them as restored, permanently unavailable entities that still show up on
+    the device page and in every entity picker, and only a manual delete would
+    get rid of them.
+    """
+    if definition.kind is not UnitKind.MULTI_DALI:
+        return
+    bridge_id = gateway.config.bridge_id
+    stale = [
+        definition.dimmer_unique_id(bridge_id, index)
+        for index in range(definition.dimmer_count, MAX_DIMMER_COUNT)
+    ]
+    if not definition.with_total_entity:
+        stale.append(definition.base_unique_id(bridge_id))
+
+    registry = er.async_get(hass)
+    for unique_id in stale:
+        entity_id = registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, unique_id)
+        if entity_id is not None:
+            registry.async_remove(entity_id)
 
 
 def build_lights(
@@ -109,13 +145,13 @@ class CasambiLight(CasambiEntity, LightEntity):
         level = self._resolve_on_level(_brightness(kwargs))
         await self._async_send_level(level, duration_ms)
         self._remember_level(level)
-        self._after_command(partial(self._apply_level, level))
+        self._after_command(partial(self._apply_level, level), expect=level)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch off by setting level 0."""
         duration_ms = self._duration_ms(_transition(kwargs))
         await self._async_send_level(0, duration_ms)
-        self._after_command(partial(self._apply_level, 0))
+        self._after_command(partial(self._apply_level, 0), expect=0)
 
     @callback
     def _apply_level(self, level: int) -> None:
@@ -126,8 +162,9 @@ class CasambiLight(CasambiEntity, LightEntity):
     @callback
     def _handle_values(self, values: UnitValues | AggregateValues) -> None:
         """Adopt a state message from the gateway."""
-        self._state_confirmed()
+        self._state_confirmed(values.level)
         self._apply_level(values.level)
+        self._remember_reported(values.level, values.last_level)
         self.async_write_ha_state()
 
 
@@ -213,7 +250,7 @@ class CasambiTunableWhiteLight(CasambiUnitLight):
         level = self._resolve_on_level(brightness)
         await self._async_send_level(level, duration_ms)
         self._remember_level(level)
-        self._after_command(partial(self._apply_level, level))
+        self._after_command(partial(self._apply_level, level), expect=level)
 
 
 class CasambiGroupLight(CasambiLight):

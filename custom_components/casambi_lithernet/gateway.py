@@ -31,6 +31,7 @@ from typing import Any
 from homeassistant.components import mqtt
 from homeassistant.core import HomeAssistant
 from homeassistant.core import callback as ha_callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .commands import (
     Command,
@@ -98,6 +99,7 @@ class _TopicSubscription:
     listeners: dict[object, Callable[[Any], None]] = field(default_factory=dict)
     remove: Callable[[], None] | None = None
     detached: bool = False
+    failed: bool = False
 
 
 class MqttCasambiGateway(CasambiGateway):
@@ -286,10 +288,18 @@ class MqttCasambiGateway(CasambiGateway):
     # ---------------------------------------------------- verification ----
 
     async def async_blink_test(self, unit_id: int, seconds: float = 2.0) -> None:
-        """Switch a unit to full brightness, wait, then switch it off."""
+        """Switch a unit to full brightness, wait, then switch it off.
+
+        The switching off happens even when the wait is cancelled, for example
+        because the user closed the setup dialog. Otherwise the luminaire the
+        user picked for the test would be left at full brightness with nothing
+        to tell them why.
+        """
         await self.async_set_level(TargetType.UNIT, unit_id, LEVEL_MAX)
-        await asyncio.sleep(seconds)
-        await self.async_set_level(TargetType.UNIT, unit_id, LEVEL_MIN)
+        try:
+            await asyncio.sleep(seconds)
+        finally:
+            await self.async_set_level(TargetType.UNIT, unit_id, LEVEL_MIN)
 
     async def async_capture(self, seconds: float) -> CaptureResult:
         """Listen to every gateway topic for a while and summarise what came."""
@@ -312,7 +322,13 @@ class MqttCasambiGateway(CasambiGateway):
             messages_received=self._messages_received,
             invalid_messages=self._invalid_messages,
             last_message_per_topic=dict(self._last_message),
-            subscribed_topics=tuple(sorted(self._subscriptions)),
+            subscribed_topics=tuple(
+                sorted(
+                    topic
+                    for topic, subscription in self._subscriptions.items()
+                    if not subscription.failed
+                )
+            ),
         )
 
     # -------------------------------------------------------- internals ---
@@ -364,7 +380,20 @@ class MqttCasambiGateway(CasambiGateway):
         def _message(message: mqtt.ReceiveMessage) -> None:
             self._handle_message(subscription, message)
 
-        remove = await mqtt.async_subscribe(self.hass, subscription.topic, _message)
+        try:
+            remove = await mqtt.async_subscribe(self.hass, subscription.topic, _message)
+        except HomeAssistantError:
+            # Nothing above us is awaiting this task, so an exception would
+            # vanish into the log as "never retrieved" and the topic would look
+            # subscribed while no message ever arrives again.
+            subscription.failed = True
+            _LOGGER.error(
+                "Could not subscribe to %s; entities on this topic will not "
+                "report their state until the entry is reloaded",
+                subscription.topic,
+                exc_info=True,
+            )
+            return
         if subscription.detached:
             remove()
             return

@@ -140,7 +140,7 @@ class CasambiSwitchingEntity(CasambiEntity):
     async def async_switch_to(self, level: int) -> None:
         """Switch the output and take over the state afterwards."""
         await self._async_send_level(level)
-        self._after_command(partial(self._apply_level, level))
+        self._after_command(partial(self._apply_level, level), expect=level)
 
     @callback
     def _apply_level(self, level: int) -> None:
@@ -166,7 +166,7 @@ class CasambiSwitchingEntity(CasambiEntity):
     @callback
     def _handle_values(self, values: UnitValues) -> None:
         """Adopt a state message from the gateway."""
-        self._state_confirmed()
+        self._state_confirmed(values.level)
         self._apply_level(values.level)
         self.async_write_ha_state()
 

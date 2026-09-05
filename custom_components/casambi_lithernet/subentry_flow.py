@@ -419,12 +419,21 @@ class UnitSubentryFlow(ConfigSubentryFlow):
                 continue
 
     def _is_duplicate(self, definition: UnitDefinition) -> bool:
-        """Whether the same kind already exists for the same address.
+        """Whether an element with the same identity already exists.
 
-        The same address with a different kind is allowed on purpose: a unit
-        and a group may carry the same number in Casambi.
+        Identity is the unique id, not the pair of kind and address, because
+        several kinds share one address space: a dimmable luminaire, a tunable
+        white one, a unit with several drivers and a switching output all
+        address a Casambi *unit*, so they all produce ``..._u<id>``. Two of
+        them on the same address would collide, and Home Assistant would drop
+        the entities of whichever loaded second, without telling anyone.
+
+        A unit and a group may still carry the same number, because their
+        unique ids differ.
         """
+        bridge_id = self._gateway_config().bridge_id
+        unique_id = definition.base_unique_id(bridge_id)
         return any(
-            other.kind is definition.kind and other.target_id == definition.target_id
+            other.base_unique_id(bridge_id) == unique_id
             for other in self._existing_definitions(self._get_entry())
         )
