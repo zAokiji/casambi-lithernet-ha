@@ -209,7 +209,24 @@
         },
         "reconfigure": {
           "title": "Edit element",
-          "description": "The kind and the address cannot be changed. Remove the element and add it again to change those."
+          "description": "Kind: `{kind}` · address: `{address}`\n\nThe kind and the address cannot be changed. Remove the element and add it again to change those.",
+          "data": {
+            "name": "Name",
+            "min_kelvin": "Lowest colour temperature",
+            "max_kelvin": "Highest colour temperature",
+            "dimmer_count": "Number of drivers",
+            "dimmer_names": "Names of the drivers",
+            "with_total_entity": "Add an entity for the whole unit",
+            "default_on_level": "Brightness when switched on without a value",
+            "optimistic_override": "Operate blind",
+            "switch_domain": "Show as"
+          },
+          "data_description": {
+            "dimmer_names": "One name per line. Leave empty to number them.",
+            "with_total_entity": "Sets all drivers together with one command.",
+            "optimistic_override": "Turn on when this unit lies outside the gateway's poll range and never reports state.",
+            "switch_domain": "A fan gets a fan icon and is recognised as a fan by voice assistants."
+          }
         }
       },
       "error": {
@@ -218,7 +235,8 @@
         "name_required": "Give the element a name.",
         "kelvin_range": "The lowest colour temperature has to be below the highest.",
         "dimmer_count_invalid": "Enter between 1 and 8 drivers.",
-        "too_many_names": "You gave more names than there are drivers."
+        "too_many_names": "You gave more names than there are drivers.",
+        "unknown": "This element cannot be stored with these values."
       },
       "abort": {
         "reconfigure_successful": "Element updated."
