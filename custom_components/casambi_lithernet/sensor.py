@@ -172,11 +172,9 @@ class CasambiDiagnosticSensor(CasambiEntity, SensorEntity):
                 gateway.config.bridge_id, description.key
             ),
             translation_key=description.translation_key,
+            read_only=True,
         )
         self.entity_description = description
-        # Read only: nothing is ever assumed here, the gateway is the only
-        # source. The optimistic decision of the base class is about commands.
-        self._attr_assumed_state = False
 
     @callback
     def _apply_properties(self, properties: UnitProperties) -> None:

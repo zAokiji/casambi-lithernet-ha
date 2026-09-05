@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -17,6 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, PLATFORMS, SUBENTRY_TYPE_UNIT
 from .gateway import create_gateway
 from .models import ConfigurationError, GatewayConfig, RuntimeData, UnitDefinition
+from .repairs import async_check_mqtt, async_watch_for_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,12 +28,13 @@ MODEL = "Casambi Gateway"
 
 async def async_setup_entry(hass: HomeAssistant, entry: CasambiConfigEntry) -> bool:
     """Set up one gateway bridge."""
-    if not await mqtt.async_wait_for_mqtt_client(hass):
+    if not await async_check_mqtt(hass, entry):
         raise ConfigEntryNotReady("MQTT integration is not available")
 
     config = GatewayConfig.from_dict({**entry.data, **entry.options})
     gateway = create_gateway(hass, config)
     await gateway.async_start()
+    entry.async_on_unload(async_watch_for_state(hass, entry, gateway))
 
     entry.runtime_data = RuntimeData(
         config=config,

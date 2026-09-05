@@ -68,10 +68,8 @@ class CasambiProblemBinarySensor(CasambiEntity, BinarySensorEntity):
                 gateway.config.bridge_id, PROBLEM_KEY
             ),
             translation_key=PROBLEM_KEY,
+            read_only=True,
         )
-        # Read only: nothing is ever assumed here, the gateway is the only
-        # source. The optimistic decision of the base class is about commands.
-        self._attr_assumed_state = False
 
     @callback
     def _apply_properties(self, properties: UnitProperties) -> None:
