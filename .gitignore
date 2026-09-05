@@ -9,3 +9,8 @@ htmlcov/
 .claude/
 docs/PROJEKT.local.md
 docs/*.local.md
+
+# The GitHub token in use may not create or update workflow files. The CI
+# definition therefore lives here untracked until the token gains the
+# "workflow" scope: gh auth refresh -s workflow
+.github/workflows/
