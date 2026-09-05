@@ -8,7 +8,7 @@ Three promises the rest of the integration builds on:
 * **One command per call.** Every method here publishes exactly one message.
   There is deliberately no "switch on" command, because a second message with
   level 255 would overwrite the brightness or colour temperature sent with it
-  (project document 2.5).
+  (docs/DESIGN.md, "Der wichtigste Fallstrick").
 * **One subscription per topic.** Several entities may watch the same unit;
   the gateway subscribes once, fans the message out and unsubscribes again
   when the last of them goes away.

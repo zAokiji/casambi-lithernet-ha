@@ -4,7 +4,8 @@ Everything in here is a pure function: parameters in,
 topic and payload out. Nothing touches MQTT, Home Assistant or the clock, so
 the whole command surface can be tested without a broker.
 
-The one rule that matters most (project document 2.5): **there is no separate
+The one rule that matters most (docs/DESIGN.md, "Der wichtigste Fallstrick"): **there is
+no separate
 "on" command**. Switching a luminaire on is a ``target_level`` with a level
 above zero, and that is the only message sent. A second message with level 255
 would overwrite any brightness or colour temperature sent alongside it, which
@@ -147,7 +148,7 @@ def target_tc(
     """Build a colour temperature command on the normalised 0-255 scale.
 
     The manual also documents a Kelvin form; the luminaires in the reference
-    installation only react to the normalised one (project document 2.3).
+    installation only react to the normalised one (docs/DESIGN.md, "Farbtemperatur").
     """
     return Command(
         topic=topics.command(CMD_TARGET_TC),
@@ -205,7 +206,7 @@ def broadcast_level(topics: Topics, level: int, duration_ms: int) -> Command:
     """Build the command that sets every luminaire of the network at once.
 
     One radio message instead of one per luminaire, which is what makes an
-    "everything off" entity fast (project document 15.2).
+    "everything off" entity fast (docs/DESIGN.md, "Elementarten").
     """
     return Command(
         topic=topics.command(CMD_BROADCAST_LEVEL),

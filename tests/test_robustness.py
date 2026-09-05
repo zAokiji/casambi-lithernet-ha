@@ -94,7 +94,8 @@ async def test_retained_state_is_adopted_again_after_a_reconnect(
     """The retained messages the broker replays land in the entity again.
 
     This is the whole reason the integration survives a broker restart: it
-    never asks the gateway for anything, it only listens (project document 13,
+    never asks the gateway for anything, it only listens (docs/DESIGN.md, "Zustand und
+    Verfügbarkeit",
     "Retained-Abhängigkeit").
     """
     await feed(VALUES_TOPIC, {"level": 200, "last_level": 200})

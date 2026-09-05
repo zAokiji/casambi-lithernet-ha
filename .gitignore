@@ -7,3 +7,5 @@ __pycache__/
 .coverage
 htmlcov/
 .claude/
+docs/PROJEKT.local.md
+docs/*.local.md

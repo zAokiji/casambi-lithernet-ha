@@ -3,7 +3,7 @@
 Pure functions, no logging and no exceptions: a payload
 that is not usable produces ``None`` and the caller decides what to say about
 it. The gateway logs the first bad message per topic on warning and the rest
-on debug (project document 8).
+on debug (docs/DESIGN.md, "Fehlerbehandlung").
 
 Field names and the gateway's own spellings live in :mod:`.const`; nothing in
 here writes a key literally.
@@ -101,7 +101,7 @@ def parse_aggregate_values(raw: str | bytes) -> AggregateValues | None:
     """Parse ``poll_group/<n>``, ``poll_broadcast`` or ``poll_ungrouped``.
 
     All three carry the same fields; ``level`` is an average across the member
-    luminaires (project document 2.2).
+    luminaires (docs/DESIGN.md, "Topics").
     """
     data = decode(raw)
     if data is None or KEY_LEVEL not in data:

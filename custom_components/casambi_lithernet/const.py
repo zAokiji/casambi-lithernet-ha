@@ -85,7 +85,7 @@ SCENE_ID_MIN: Final = 1
 SCENE_ID_MAX: Final = 255
 
 # How long a non-optimistic entity waits for the gateway to confirm a command
-# before it adopts the value it sent (section 6.6 of the project document).
+# before it adopts the value it sent (docs/DESIGN.md, "Zustand und Verfügbarkeit").
 STATE_CONFIRM_TIMEOUT: Final = 3.0
 
 # Seconds without any state message after which the "check polling method"
@@ -234,7 +234,7 @@ class UnitKind(StrEnum):
     SCENE = "scene"
     BROADCAST = "broadcast"
 
-    # Reserved, no behaviour yet. See project document section 15.
+    # Reserved, no behaviour yet. See docs/DESIGN.md.
     RGBW = "rgbw"
     VERTICAL = "vertical"
     SENSOR_UNIT = "sensor_unit"

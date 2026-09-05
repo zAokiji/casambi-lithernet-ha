@@ -1,4 +1,4 @@
-"""Package G: the two repair issues from section 8 of the project document.
+"""Package G: the two repair issues from docs/DESIGN.md, "Fehlerbehandlung".
 
 The fake gateway comes from ``test_entity.py`` ; this module only
 adds a message counter on top, because that is the single thing the "no state

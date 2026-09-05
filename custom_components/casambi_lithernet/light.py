@@ -1,6 +1,6 @@
 """Light platform for simple, tunable white, group and multi driver elements.
 
-The four kinds from project document section 6:
+The four kinds from docs/DESIGN.md, "Elementarten":
 
 ``simple``
     One ``target_level`` command, state from ``poll_device/<id>/values``.
@@ -19,7 +19,8 @@ The four kinds from project document section 6:
     value for the whole unit, plus an optional total entity on ``target_level``
     that may use that mixed value as its state.
 
-The rule that matters most (project document 2.5): switching on with a
+The rule that matters most (docs/DESIGN.md, "Der wichtigste Fallstrick"): switching on
+with a
 brightness must put **exactly one** command on the wire. A separate "on"
 command with level 255 overwrites any dim or colour temperature command that
 went before it, which is what the old YAML needed ``on_command_type:

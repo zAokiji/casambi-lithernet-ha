@@ -242,3 +242,10 @@ die Schritte zur Ablösung in [docs/MIGRATION.md](docs/MIGRATION.md).
 ## Lizenz
 
 MIT, siehe [LICENSE](LICENSE).
+
+## Weiterlesen
+
+- [docs/DESIGN.md](docs/DESIGN.md): warum die Integration so gebaut ist, welche
+  Eigenheiten das Gateway hat und was gemessen wurde.
+- [docs/MIGRATION.md](docs/MIGRATION.md): Umstieg von einer bestehenden
+  MQTT-Konfiguration in `configuration.yaml`.

@@ -2,7 +2,7 @@
 
 Belongs with :mod:`.fan`.
 
-The kind ``switch`` (project document 6.5) is a Casambi unit with a plain
+The kind ``switch`` (docs/DESIGN.md, "Elementarten") is a Casambi unit with a plain
 switching output: the WC fan of the reference installation. It knows on and
 off, nothing else — no dimming, no speed steps, no run-on timer. A run-on
 ("keep running five minutes after the light goes out") belongs into a Home

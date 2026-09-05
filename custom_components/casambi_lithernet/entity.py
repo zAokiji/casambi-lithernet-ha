@@ -17,7 +17,8 @@ What the base class does, so a platform does not have to repeat it:
 * **Subscription lifecycle.** Availability and, for unit addressed kinds, the
   ``propertys`` topic are subscribed in :meth:`async_added_to_hass` and removed
   again on teardown.
-* **Two stage availability** (project document 6.6): the broker connection
+* **Two stage availability** (docs/DESIGN.md, "Zustand und Verfügbarkeit"): the broker
+  connection
   always counts, and elements that have ``propertys`` additionally need
   ``online``. Groups, scenes and broadcast only hang on the broker.
 * **Last brightness memory** for turning on without a brightness, falling back

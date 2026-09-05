@@ -1,4 +1,4 @@
-"""Regression tests for the pitfalls of project document 2.5.
+"""Regression tests for the pitfalls of docs/DESIGN.md, "Der wichtigste Fallstrick".
 
 Every test here exists because the behaviour it checks was
 already wrong once, in the YAML setup this integration replaces. They run

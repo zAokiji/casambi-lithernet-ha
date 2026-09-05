@@ -1,6 +1,6 @@
 """Repair issues of the Casambi (Lithernet MQTT) integration.
 
-Two issues from section 8 of the project document, both
+Two issues from docs/DESIGN.md, "Fehlerbehandlung", both
 purely informational: the user has to change something outside Home Assistant,
 so there is nothing a fix flow could do on its own.
 

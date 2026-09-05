@@ -11,16 +11,17 @@ full chain in both directions:
 
 Three groups of tests:
 
-1. **One per kind.** All seven kinds of project document 6 and 15 are set up,
+1. **One per kind.** All seven kinds of docs/DESIGN.md, "Elementarten" and 15 are set
+up,
    commanded and fed a recorded state message.
-2. **The reference installation.** The seventeen entities of project document
+2. **The reference installation.** The seventeen entities of docs/DESIGN.md
    section 11, built from the twelve elements they come from, checked for
    entity count, device assignment and unique id collisions.
 3. **Restart.** Unloading and setting the entry up again brings every entity
    back with the state from the retained messages the broker replays.
 
 ``feed_retained`` is what makes the restart test honest: the gateway publishes
-``values`` and ``propertys`` retained (project document 12.3), so the broker
+``values`` and ``propertys`` retained (docs/DESIGN.md, "Topics"), so the broker
 hands them to whoever subscribes next. The mocked broker keeps no messages, so
 the test replays them itself with the retain flag set, which is exactly what a
 real broker does after a Home Assistant restart.
@@ -366,7 +367,7 @@ async def test_broadcast_round_trip(
 
 # --------------------------------------------- the reference installation --
 
-#: The twelve elements behind the seventeen entities of project document 11.
+#: The twelve elements behind the seventeen entities of docs/MIGRATION.md.
 #: The two multi driver units get no total entity, because the installation has
 #: none today; that is what makes the entity count come out at seventeen.
 INSTALLATION: tuple[UnitDefinition, ...] = (
@@ -428,7 +429,7 @@ EXPECTED_ENTITY_IDS: frozenset[str] = frozenset(
 
 @pytest.fixture
 async def installation(hass: HomeAssistant, mqtt_mock, make_entry) -> MockConfigEntry:
-    """Set up the reference installation of project document section 11."""
+    """Set up the reference installation of docs/MIGRATION.md."""
     return await setup_bridge(hass, make_entry, INSTALLATION)
 
 

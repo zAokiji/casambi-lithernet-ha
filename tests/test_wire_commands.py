@@ -229,7 +229,7 @@ async def test_switching_on_publishes_exactly_one_message(
     The comparison covers the whole published list, not just its first entry,
     so an additional command fails this test no matter where it is sent from:
     a separate "on" with level 255 would overwrite the brightness that came
-    with it (project document 2.5).
+    with it (docs/DESIGN.md, "Der wichtigste Fallstrick").
     """
     await setup_bridge(hass, make_entry, [unit])
     entity_id = entity_id_of(hass, platform, unique_id)

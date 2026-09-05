@@ -460,7 +460,7 @@ class CasambiConfigFlow(ConfigFlow, domain=DOMAIN):
         """Listen to the gateway and report what arrived.
 
         With polling method ``inactive`` the gateway sends nothing by design,
-        so there is nothing to listen for (project document section 5): the
+        so there is nothing to listen for (docs/DESIGN.md): the
         check is skipped and the consequence explained instead. The guard sits
         here rather than at the call sites, so every way into the state check
         passes it.
