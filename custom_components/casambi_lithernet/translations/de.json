@@ -209,7 +209,24 @@
         },
         "reconfigure": {
           "title": "Element bearbeiten",
-          "description": "Art und Adresse lassen sich nicht ändern. Entferne das Element und lege es neu an, um daran etwas zu ändern."
+          "description": "Art: `{kind}` · Adresse: `{address}`\n\nArt und Adresse lassen sich nicht ändern. Entferne das Element und lege es neu an, um daran etwas zu ändern.",
+          "data": {
+            "name": "Name",
+            "min_kelvin": "Niedrigste Farbtemperatur",
+            "max_kelvin": "Höchste Farbtemperatur",
+            "dimmer_count": "Anzahl der Treiber",
+            "dimmer_names": "Namen der Treiber",
+            "with_total_entity": "Entität für die ganze Unit anlegen",
+            "default_on_level": "Helligkeit beim Einschalten ohne Wert",
+            "optimistic_override": "Blind bedienen",
+            "switch_domain": "Darstellen als"
+          },
+          "data_description": {
+            "dimmer_names": "Ein Name pro Zeile. Leer lassen, um sie durchzunummerieren.",
+            "with_total_entity": "Setzt alle Treiber gemeinsam mit einem Befehl.",
+            "optimistic_override": "Einschalten, wenn diese Unit außerhalb des Poll-Bereichs liegt und nie einen Zustand meldet.",
+            "switch_domain": "Ein Lüfter bekommt ein Lüfter-Symbol und wird von Sprachassistenten als Lüfter erkannt."
+          }
         }
       },
       "error": {
@@ -218,7 +235,8 @@
         "name_required": "Gib dem Element einen Namen.",
         "kelvin_range": "Die niedrigste Farbtemperatur muss unter der höchsten liegen.",
         "dimmer_count_invalid": "Gib zwischen 1 und 8 Treibern an.",
-        "too_many_names": "Du hast mehr Namen angegeben, als es Treiber gibt."
+        "too_many_names": "Du hast mehr Namen angegeben, als es Treiber gibt.",
+        "unknown": "Mit diesen Werten lässt sich das Element nicht speichern."
       },
       "abort": {
         "reconfigure_successful": "Element aktualisiert."
