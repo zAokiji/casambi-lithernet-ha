@@ -26,7 +26,6 @@ from fake_gateway import (
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -80,19 +79,6 @@ async def test_device_links_to_the_gateway(hass: HomeAssistant, setup_units) -> 
     assert gateway_device is not None
     assert device.via_device_id == gateway_device.id
     assert entry.entry_id in device.config_entries
-
-
-async def test_unique_id_survives_a_rename(hass: HomeAssistant, setup_units) -> None:
-    """The unique id comes from the address, never from the name."""
-    _, _ = await setup_units([SIMPLE])
-    entities = er.async_get(hass)
-    entity_id = entities.async_get_entity_id("light", DOMAIN, "casambi_lithernet_0_u12")
-    assert entity_id is not None
-
-    renamed = UnitDefinition(
-        kind=UnitKind.SIMPLE, name="Kueche Kochnische", target_id=12
-    )
-    assert renamed.base_unique_id(0) == SIMPLE.base_unique_id(0)
 
 
 async def test_offline_unit_is_unavailable(

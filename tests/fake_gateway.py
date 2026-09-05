@@ -25,11 +25,48 @@ What is in here:
 
 For a test that wants the *real* gateway with mocked MQTT instead, see
 ``test_end_to_end.py``.
+
+Where the double is held to the real gateway
+--------------------------------------------
+
+``test_gateway_contract.py`` runs one set of assertions against both this class
+and :class:`~custom_components.casambi_lithernet.gateway.MqttCasambiGateway`:
+fan out to several listeners, unsubscribing, the last known state, ``available``
+and a listener that raises. Anything that suite covers has to behave the same
+here as in the real integration.
+
+Deliberate differences
+----------------------
+
+These are the points where the double does *not* imitate the real gateway. They
+are wanted, and a test that depends on the real behaviour belongs in
+``test_end_to_end.py``, ``test_regressions.py`` or ``test_wire_commands.py``
+rather than on this class.
+
+* **No MQTT and no parser.** ``push_*`` takes the state object the parser would
+  have produced, so nothing here can tell a good payload from a broken one.
+  Discarding unusable messages, warning once per topic and keeping the last
+  good state are therefore only testable against the real gateway.
+* **Commands are recorded, not serialised.** :class:`Command` keeps the
+  arguments; topic and payload building live in ``commands.py`` and are covered
+  by ``test_commands.py`` and the wire level modules.
+* **The broker connection is a flag.** ``set_available`` notifies the
+  subscribers directly instead of going through the MQTT integration, and the
+  double is available from the moment it is built, while the real gateway is
+  unavailable until ``async_start``.
+* **Unsubscribe works by identity.** The real gateway keys every listener with
+  its own token, so the same callable can subscribe twice and remove one of the
+  two. Here the second remove of such a pair would drop the other entry as
+  well. No entity subscribes the same callable twice.
+* **Verification and diagnostics are inert.** ``async_blink_test``,
+  ``async_capture`` and ``diagnostics`` return nothing useful; the config flow
+  tests that need them use the real gateway.
 """
 
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Any
@@ -57,6 +94,8 @@ from custom_components.casambi_lithernet.state import (
     UnitProperties,
     UnitValues,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -101,38 +140,32 @@ class FakeGateway(CasambiGateway):
     def push_unit_values(self, unit_id: int, values: UnitValues) -> None:
         """Deliver a values message to every subscriber."""
         self._unit_values[unit_id] = values
-        for callback in list(self._unit_subs.get(unit_id, ())):
-            callback(values)
+        _fan_out(self._unit_subs.get(unit_id, ()), values)
 
     def push_unit_properties(self, unit_id: int, properties: UnitProperties) -> None:
         """Deliver a propertys message to every subscriber."""
         self._unit_properties[unit_id] = properties
-        for callback in list(self._property_subs.get(unit_id, ())):
-            callback(properties)
+        _fan_out(self._property_subs.get(unit_id, ()), properties)
 
     def push_group_values(self, group_id: int, values: AggregateValues) -> None:
         """Deliver a group message to every subscriber."""
         self._group_values[group_id] = values
-        for callback in list(self._group_subs.get(group_id, ())):
-            callback(values)
+        _fan_out(self._group_subs.get(group_id, ()), values)
 
     def push_scene_values(self, scene_id: int, values: SceneValues) -> None:
         """Deliver a scene message to every subscriber."""
         self._scene_values[scene_id] = values
-        for callback in list(self._scene_subs.get(scene_id, ())):
-            callback(values)
+        _fan_out(self._scene_subs.get(scene_id, ()), values)
 
     def push_broadcast_values(self, values: AggregateValues) -> None:
         """Deliver a broadcast message to every subscriber."""
         self._broadcast = values
-        for callback in list(self._broadcast_subs):
-            callback(values)
+        _fan_out(self._broadcast_subs, values)
 
     def set_available(self, available: bool) -> None:
         """Report a broker connection change."""
         self._available = available
-        for callback in list(self._availability_subs):
-            callback(available)
+        _fan_out(self._availability_subs, available)
 
     def seed_unit_values(self, unit_id: int, values: UnitValues) -> None:
         """Pretend a retained message was already on the broker."""
@@ -282,6 +315,22 @@ class FakeGateway(CasambiGateway):
     def diagnostics(self) -> GatewayDiagnostics:
         """Report empty diagnostics."""
         return GatewayDiagnostics()
+
+
+def _fan_out(listeners: Iterable[Any], value: Any) -> None:
+    """Hand a value to every listener, the way the real gateway does.
+
+    ``MqttCasambiGateway`` runs each callback in a ``try``/``except`` so that
+    one broken entity cannot keep the others from being updated. The double
+    copies that behaviour instead of letting the exception through, because a
+    test module running on the double must see the same fan out as the real
+    installation. ``tests/test_gateway_contract.py`` checks both.
+    """
+    for listener in list(listeners):
+        try:
+            listener(value)
+        except Exception:  # one bad entity must not stop the others
+            _LOGGER.exception("Casambi listener raised on %r", value)
 
 
 def _append(target: list[Any], callback: Any) -> Unsubscribe:
