@@ -201,7 +201,7 @@ class UnitDefinition:
         """Build from stored subentry data, raising on unusable input."""
         raw_kind = data.get(CONF_KIND)
         try:
-            kind = UnitKind(raw_kind)
+            kind = UnitKind(str(raw_kind))
         except ValueError as err:
             raise ConfigurationError(f"unknown kind {raw_kind!r}") from err
 
