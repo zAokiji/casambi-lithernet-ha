@@ -24,6 +24,14 @@
           "polling_method": "Polling method set in the gateway"
         }
       },
+      "polling_inactive": {
+        "title": "Polling is inactive",
+        "description": "You said the gateway is set to **inactive**. It then sends no state at all, so there is nothing to listen for and the state check is skipped.\n\nEvery luminaire will be operated blind: Home Assistant shows it as a device with separate on and off buttons and never learns whether it is on. If you would rather avoid that, go back and pick a passive polling method.",
+        "menu_options": {
+          "finish": "Finish setup",
+          "polling": "Change the polling method"
+        }
+      },
       "hints": {
         "title": "Two more settings",
         "description": "**Use Broadcast** stays off. It controls Bluetooth broadcast and has nothing to do with MQTT.\n\nGive the gateway a **fixed IP address** so its web interface stays reachable.\n\nWhen both are done, continue to the check."
@@ -58,7 +66,7 @@
       },
       "verify_state_result": {
         "title": "Result of the state check",
-        "description": "{summary}",
+        "description": "**{count}** messages arrived in {seconds} seconds.\n\n- Units: {units}\n- Groups: {groups}\n- Scenes: {scenes}\n- Topic kinds: {topics}\n- Device elements (`poll_devicet`): {devicet}\n- Buttons (`poll_button`): {buttons}\n\nA tick means messages of that kind arrived, a dash means none did. The sensors and buttons of a later version need `poll_devicet` and `poll_button`.",
         "menu_options": {
           "finish": "Finish setup",
           "verify_state": "Listen again"
@@ -66,7 +74,7 @@
       },
       "no_state": {
         "title": "No state arrives",
-        "description": "Nothing came back during the check. By far the most likely cause is the polling method being set to **inactive** in the gateway.\n\nYou can set it and listen again, or continue now. Without state every luminaire has to be operated blind, which Home Assistant shows as a device with separate on and off buttons.",
+        "description": "In {seconds} seconds nothing came back. By far the most likely cause is the polling method being set to **inactive** in the gateway.\n\nYou can set it and listen again, or continue now. Without state every luminaire has to be operated blind, which Home Assistant shows as a device with separate on and off buttons.",
         "menu_options": {
           "verify_state": "Listen again",
           "finish": "Continue anyway"
@@ -108,7 +116,7 @@
       },
       "verify_result": {
         "title": "Result",
-        "description": "{summary}"
+        "description": "**{count}** messages arrived in {seconds} seconds.\n\n- Units: {units}\n- Groups: {groups}\n- Scenes: {scenes}\n- Topic kinds: {topics}\n- Device elements (`poll_devicet`): {devicet}\n- Buttons (`poll_button`): {buttons}\n\nA tick means messages of that kind arrived, a dash means none did. The sensors and buttons of a later version need `poll_devicet` and `poll_button`."
       }
     }
   },

@@ -24,6 +24,14 @@
           "polling_method": "Im Gateway eingestellte Polling-Methode"
         }
       },
+      "polling_inactive": {
+        "title": "Polling ist inaktiv",
+        "description": "Du hast angegeben, dass das Gateway auf **inactive** steht. Dann sendet es überhaupt keine Zustände, es gibt also nichts mitzuhören und die Zustandsprüfung entfällt.\n\nJede Leuchte wird blind bedient: Home Assistant zeigt sie als Gerät mit getrennten Ein- und Aus-Knöpfen und erfährt nie, ob sie an ist. Wenn du das lieber vermeidest, gehe zurück und wähle eine passive Polling-Methode.",
+        "menu_options": {
+          "finish": "Einrichtung abschließen",
+          "polling": "Polling-Methode ändern"
+        }
+      },
       "hints": {
         "title": "Zwei weitere Einstellungen",
         "description": "**Use Broadcast** bleibt aus. Der Schalter steuert Bluetooth-Broadcast und hat mit MQTT nichts zu tun.\n\nGib dem Gateway eine **feste IP-Adresse**, damit seine Weboberfläche erreichbar bleibt.\n\nWenn beides erledigt ist, geht es zur Prüfung."
@@ -58,7 +66,7 @@
       },
       "verify_state_result": {
         "title": "Ergebnis der Zustandsprüfung",
-        "description": "{summary}",
+        "description": "Es kamen **{count}** Nachrichten in {seconds} Sekunden an.\n\n- Units: {units}\n- Gruppen: {groups}\n- Szenen: {scenes}\n- Topic-Arten: {topics}\n- Geräteelemente (`poll_devicet`): {devicet}\n- Taster (`poll_button`): {buttons}\n\nEin Haken bedeutet, dass Nachrichten dieser Art angekommen sind, ein Strich, dass keine kamen. Die Sensoren und Taster einer späteren Version brauchen `poll_devicet` und `poll_button`.",
         "menu_options": {
           "finish": "Einrichtung abschließen",
           "verify_state": "Noch einmal mithören"
@@ -66,7 +74,7 @@
       },
       "no_state": {
         "title": "Es kommen keine Zustände",
-        "description": "Während der Prüfung kam nichts zurück. Die mit Abstand wahrscheinlichste Ursache ist die Polling-Methode **inactive** im Gateway.\n\nDu kannst sie einstellen und noch einmal mithören oder jetzt fortfahren. Ohne Zustände muss jede Leuchte blind bedient werden, was Home Assistant als Gerät mit getrennten Ein- und Aus-Knöpfen darstellt.",
+        "description": "In {seconds} Sekunden kam nichts zurück. Die mit Abstand wahrscheinlichste Ursache ist die Polling-Methode **inactive** im Gateway.\n\nDu kannst sie einstellen und noch einmal mithören oder jetzt fortfahren. Ohne Zustände muss jede Leuchte blind bedient werden, was Home Assistant als Gerät mit getrennten Ein- und Aus-Knöpfen darstellt.",
         "menu_options": {
           "verify_state": "Noch einmal mithören",
           "finish": "Trotzdem fortfahren"
@@ -108,7 +116,7 @@
       },
       "verify_result": {
         "title": "Ergebnis",
-        "description": "{summary}"
+        "description": "Es kamen **{count}** Nachrichten in {seconds} Sekunden an.\n\n- Units: {units}\n- Gruppen: {groups}\n- Szenen: {scenes}\n- Topic-Arten: {topics}\n- Geräteelemente (`poll_devicet`): {devicet}\n- Taster (`poll_button`): {buttons}\n\nEin Haken bedeutet, dass Nachrichten dieser Art angekommen sind, ein Strich, dass keine kamen. Die Sensoren und Taster einer späteren Version brauchen `poll_devicet` und `poll_button`."
       }
     }
   },

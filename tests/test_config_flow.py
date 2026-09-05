@@ -102,7 +102,10 @@ async def _configure(
 
 
 async def _walk_to_blink(
-    hass: HomeAssistant, bridge_id: int = 0, unit_id: int = 19
+    hass: HomeAssistant,
+    bridge_id: int = 0,
+    unit_id: int = 19,
+    polling: PollingMethod = PollingMethod.PASSIVE_37_80,
 ) -> dict[str, Any]:
     """Walk steps 1 to 5a and stop at the blink menu."""
     result = await _start(hass)
@@ -118,7 +121,7 @@ async def _walk_to_blink(
     result = await _configure(
         hass,
         result["flow_id"],
-        {CONF_POLLING_METHOD: str(PollingMethod.PASSIVE_37_80)},
+        {CONF_POLLING_METHOD: str(polling)},
     )
     assert result["step_id"] == "hints"
     result = await _configure(hass, result["flow_id"])
@@ -144,9 +147,9 @@ async def test_full_flow_creates_the_entry(
     assert result["step_id"] == "verify_state"
     result = await _configure(hass, result["flow_id"])
     assert result["step_id"] == "verify_state_result"
-    summary = result["description_placeholders"]["summary"]
-    assert "560" in summary
-    assert "poll_device/<id>/values" in summary
+    placeholders = result["description_placeholders"]
+    assert placeholders["count"] == "560"
+    assert placeholders["topics"] == ", ".join(FULL_CAPTURE.topic_kinds)
 
     result = await _configure(hass, result["flow_id"], {"next_step_id": "finish"})
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -301,14 +304,104 @@ async def test_capture_gateway_is_stopped_when_the_flow_is_abandoned(
     assert gateway_log["started"] == gateway_log["stopped"] == 1
 
 
-def test_summary_names_device_elements_and_buttons() -> None:
-    """The two flags the later sensor package depends on are always shown."""
-    summary = config_flow.format_capture(FULL_CAPTURE)
-    assert "poll_devicet" in summary
-    assert "poll_button" in summary
-    assert "Units: 2, 4, 12" in summary
-    assert "Groups: 1, 2" in summary
-    assert "Scenes: 1" in summary
+async def test_inactive_polling_skips_the_state_check(
+    hass: HomeAssistant, mqtt_mock: MagicMock, gateway_log: dict[str, Any]
+) -> None:
+    """With "inactive" there is nothing to listen for, so nothing is captured."""
+    result = await _walk_to_blink(hass, polling=PollingMethod.INACTIVE)
+    result = await _configure(hass, result["flow_id"], {"next_step_id": "blink_yes"})
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "polling_inactive"
+    assert result["menu_options"] == ["finish", "polling"]
+    assert gateway_log["captures"] == []
+
+    result = await _configure(hass, result["flow_id"], {"next_step_id": "finish"})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_POLLING_METHOD] == str(PollingMethod.INACTIVE)
+    assert gateway_log["captures"] == []
+
+
+async def test_inactive_hint_leads_back_to_the_polling_step(
+    hass: HomeAssistant, mqtt_mock: MagicMock, gateway_log: dict[str, Any]
+) -> None:
+    """The hint offers to pick a passive method after all."""
+    result = await _walk_to_blink(hass, polling=PollingMethod.INACTIVE)
+    result = await _configure(hass, result["flow_id"], {"next_step_id": "blink_yes"})
+    result = await _configure(hass, result["flow_id"], {"next_step_id": "polling"})
+    assert result["step_id"] == "polling"
+
+    result = await _configure(
+        hass,
+        result["flow_id"],
+        {CONF_POLLING_METHOD: str(PollingMethod.PASSIVE_37_80)},
+    )
+    assert result["step_id"] == "hints"
+
+
+async def test_inactive_polling_also_skips_the_check_after_a_failed_blink(
+    hass: HomeAssistant, mqtt_mock: MagicMock, gateway_log: dict[str, Any]
+) -> None:
+    """Skipping from the blink help must not start a capture either."""
+    result = await _walk_to_blink(hass, polling=PollingMethod.INACTIVE)
+    result = await _configure(hass, result["flow_id"], {"next_step_id": "blink_no"})
+    result = await _configure(hass, result["flow_id"], {"next_step_id": "verify_state"})
+    assert result["step_id"] == "polling_inactive"
+    assert gateway_log["captures"] == []
+
+
+def test_capture_placeholders_carry_every_value() -> None:
+    """Each value of the summary is its own placeholder, none is a word."""
+    placeholders = config_flow.capture_placeholders(FULL_CAPTURE)
+    assert placeholders == {
+        "count": "560",
+        "seconds": "20",
+        "units": "2, 4, 12",
+        "groups": "1, 2",
+        "scenes": "1",
+        "topics": "poll_device/<id>/propertys, poll_device/<id>/values",
+        "devicet": config_flow.NOTHING,
+        "buttons": config_flow.NOTHING,
+    }
+
+
+def test_capture_placeholders_use_a_dash_for_what_was_not_seen() -> None:
+    """Missing addresses and kinds stay a dash, a seen kind gets a tick."""
+    placeholders = config_flow.capture_placeholders(
+        CaptureResult(
+            seconds=20.0,
+            message_count=1,
+            topic_kinds=("poll_devicet/<id>/element_dimmer", "poll_button/<id>"),
+        )
+    )
+    assert placeholders["units"] == config_flow.NOTHING
+    assert placeholders["groups"] == config_flow.NOTHING
+    assert placeholders["scenes"] == config_flow.NOTHING
+    assert placeholders["devicet"] == config_flow.SEEN
+    assert placeholders["buttons"] == config_flow.SEEN
+
+
+def test_summary_texts_contain_no_untranslated_labels() -> None:
+    """The German result text carries the labels, the values carry no words."""
+    de = json.loads(
+        (COMPONENT_DIR / "translations/de.json").read_text(encoding="utf-8")
+    )
+    result = de["config"]["step"]["verify_state_result"]["description"]
+    assert "Gruppen:" in result
+    assert "Szenen:" in result
+    assert "Groups" not in result
+    assert "Scenes" not in result
+    assert "messages" not in result
+    assert de["options"]["step"]["verify_result"]["description"] == result
+
+    placeholders = config_flow.capture_placeholders(FULL_CAPTURE)
+    for name in placeholders:
+        assert f"{{{name}}}" in result
+    # Only the topic kinds contain letters, and those are technical names the
+    # gateway produces, not words to translate.
+    for name, value in placeholders.items():
+        if name == "topics":
+            continue
+        assert not any(char.isalpha() for char in value), name
 
 
 # -------------------------------------------------------- options flow ---
@@ -362,7 +455,7 @@ async def test_options_verify_runs_the_same_check(
     assert result["step_id"] == "verify"
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["step_id"] == "verify_result"
-    assert result["description_placeholders"]["summary"] == config_flow.format_capture(
+    assert result["description_placeholders"] == config_flow.capture_placeholders(
         FULL_CAPTURE
     )
     assert gateway_log["started"] == gateway_log["stopped"] == 1
@@ -414,6 +507,7 @@ def test_every_flow_step_has_translations() -> None:
         "verify_state",
         "verify_state_result",
         "no_state",
+        "polling_inactive",
     }
     assert set(strings["config"]["abort"]) >= {"mqtt_missing", "already_configured"}
     assert set(strings["options"]["step"]) >= {
