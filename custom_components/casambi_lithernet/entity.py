@@ -30,6 +30,9 @@ What the base class does, so a platform does not have to repeat it:
   when the kind is optimistic by nature (``force_optimistic``), or when the
   gateway's polling method delivers no state at all; ``False`` and ``None`` in
   the override both mean "do not force it". See :func:`_decide_optimistic`.
+  The decision is about *commands*, so entities that only read (the diagnostic
+  sensors of package J) pass ``read_only=True`` and never get
+  ``assumed_state`` at all.
 
 How a subclass uses it:
 
@@ -84,6 +87,7 @@ class CasambiEntity(Entity):
         unique_id: str,
         translation_key: str | None = None,
         force_optimistic: bool = False,
+        read_only: bool = False,
     ) -> None:
         """Set up device info, unique id and the optimistic decision.
 
@@ -93,6 +97,11 @@ class CasambiEntity(Entity):
         element itself, which then inherits the device name.
         ``force_optimistic`` is for entities the gateway can never confirm, such
         as one DALI driver inside a multi driver unit.
+        ``read_only`` marks an entity that never sends a command, such as the
+        diagnostic sensors: it renders what the gateway reported or nothing at
+        all, so ``assumed_state`` is never set on it. Without the flag such an
+        entity would inherit the optimistic decision and claim an assumed state
+        with polling ``inactive``, where in truth it simply has no state.
         """
         self._gateway = gateway
         self._definition = definition
@@ -101,12 +110,14 @@ class CasambiEntity(Entity):
         if translation_key is not None:
             self._attr_translation_key = translation_key
 
+        self._read_only = read_only
         self._optimistic = _decide_optimistic(
             definition,
             delivers_state=self._config.delivers_state,
             force_optimistic=force_optimistic,
         )
-        self._attr_assumed_state = self._optimistic
+        if not read_only:
+            self._attr_assumed_state = self._optimistic
 
         self._broker_available = gateway.available
         self._online = True
