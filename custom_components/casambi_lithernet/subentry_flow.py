@@ -1,6 +1,6 @@
 """Flows for adding, editing and removing Casambi elements.
 
-Owned by package D. The flows never talk to MQTT; they only produce and read
+The flows never talk to MQTT; they only produce and read
 back what :meth:`~.models.UnitDefinition.to_dict` stores in a config subentry.
 
 Adding starts with a menu of the kinds implemented in version 0.1 (see
@@ -55,6 +55,8 @@ from .const import (
     GROUP_ID_MAX,
     GROUP_ID_MIN,
     IMPLEMENTED_KINDS,
+    KELVIN_FORM_MAX,
+    KELVIN_FORM_MIN,
     LEVEL_MAX,
     MAX_DIMMER_COUNT,
     SCENE_ID_MAX,
@@ -68,12 +70,6 @@ from .const import (
     UnitKind,
 )
 from .models import ConfigurationError, GatewayConfig, UnitDefinition
-
-#: Colour temperature bounds the form accepts. Wider than the Casambi range on
-#: purpose, because the tunable white curve is only linear between the two
-#: values the user enters.
-KELVIN_FORM_MIN: Final = 1000
-KELVIN_FORM_MAX: Final = 10000
 
 #: Substrings of :class:`~.models.ConfigurationError` messages mapped to the
 #: error keys under ``config_subentries.unit.error``. Checked in order, so the
@@ -225,9 +221,17 @@ class UnitSubentryFlow(ConfigSubentryFlow):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Edit an existing element, keeping its kind and address."""
+        """Edit an existing element, keeping its kind and address.
+
+        Setup skips an element whose stored data cannot be read, but it stays
+        visible on the integration page, so editing it is the one way out of
+        that state. It must therefore not be the one path without a safety net.
+        """
         subentry = self._get_reconfigure_subentry()
-        existing = UnitDefinition.from_dict(dict(subentry.data))
+        try:
+            existing = UnitDefinition.from_dict(dict(subentry.data))
+        except ConfigurationError:
+            return self.async_abort(reason="element_unreadable")
         kind = existing.kind
 
         errors: dict[str, str] = {}

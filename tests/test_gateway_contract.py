@@ -1,6 +1,6 @@
 """The gateway contract, checked against both implementations.
 
-Owned by package H. Eleven test modules replace package B with
+Eleven test modules replace the real gateway with
 :class:`~fake_gateway.FakeGateway`; if the double drifts away from
 :class:`~custom_components.casambi_lithernet.gateway.MqttCasambiGateway`, all of
 them keep passing while saying nothing about the real integration. Nothing used

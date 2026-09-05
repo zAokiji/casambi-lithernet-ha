@@ -1,6 +1,6 @@
 """Switch platform for Casambi switching outputs.
 
-Owned by package F, together with :mod:`.fan`.
+Belongs with :mod:`.fan`.
 
 The kind ``switch`` (project document 6.5) is a Casambi unit with a plain
 switching output: the WC fan of the reference installation. It knows on and

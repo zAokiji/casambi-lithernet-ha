@@ -1,6 +1,6 @@
 """The Casambi (Lithernet MQTT) integration.
 
-Owned by package A. Sets up one gateway bridge per config entry, keeps the
+Sets up one gateway bridge per config entry, keeps the
 parsed configuration on the entry's runtime data and forwards to the platforms.
 """
 

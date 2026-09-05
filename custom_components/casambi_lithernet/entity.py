@@ -1,6 +1,6 @@
 """Common entity base class for every Casambi platform.
 
-Owned by package E, imported by the light platform (E), fan and switch (F),
+Imported by the light platform, fan and switch,
 the diagnostic entities (J) and scene/broadcast (K).
 
 What the base class does, so a platform does not have to repeat it:

@@ -1,6 +1,6 @@
 """Diagnostics download for one gateway entry.
 
-Owned by package G. Serves the standard "Download diagnostics" button of Home
+Serves the standard "Download diagnostics" button of Home
 Assistant with what section 4.2 of the project document asks for: the gateway
 configuration, the configured elements, and the counters the gateway keeps
 (commands sent, messages received and discarded, last message per topic with a

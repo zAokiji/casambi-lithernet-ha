@@ -1,6 +1,6 @@
 """Light platform for simple, tunable white, group and multi driver elements.
 
-Owned by package E. The four kinds from project document section 6:
+The four kinds from project document section 6:
 
 ``simple``
     One ``target_level`` command, state from ``poll_device/<id>/values``.

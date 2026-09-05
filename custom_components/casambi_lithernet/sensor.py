@@ -1,6 +1,6 @@
 """Diagnostic sensors derived from the units' properties.
 
-Owned by package J. Every sensor here reads one field of the retained
+Every sensor here reads one field of the retained
 ``poll_device/<id>/propertys`` message (project document 15.6), so all of them
 are available right after a restart without asking the gateway for anything.
 

@@ -1,6 +1,6 @@
 """Light entities for Casambi scenes and for the whole network.
 
-Owned by package K, hooked into the light platform of package E at the one
+Hooked into the light platform at the one
 marked place in :func:`~.light.async_setup_entry`. Project document 15.1 and
 15.2:
 

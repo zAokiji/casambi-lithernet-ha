@@ -1,6 +1,6 @@
 """Shared test fixtures.
 
-Owned by package A. Packages B to G build their tests on these helpers; do not
+Every test module builds on these helpers; do not
 hand-roll MQTT mocking in individual test modules.
 
 The three things a test usually needs:

@@ -1,6 +1,6 @@
 """What actually reaches the wire, for every kind that sends commands.
 
-Owned by package H. Like ``test_regressions.py`` and ``test_end_to_end.py``
+Like ``test_regressions.py`` and ``test_end_to_end.py``
 this module runs the real
 :class:`~custom_components.casambi_lithernet.gateway.MqttCasambiGateway` with a
 mocked broker underneath, so an assertion here is about the bytes an

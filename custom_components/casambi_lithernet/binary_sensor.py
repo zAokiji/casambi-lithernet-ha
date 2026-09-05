@@ -1,6 +1,6 @@
 """Problem indicator derived from the units' condition byte.
 
-Owned by package J. One binary sensor per Casambi element that the gateway
+One binary sensor per Casambi element that the gateway
 publishes ``propertys`` for, i.e. the unit addressed kinds; groups, scenes and
 broadcast get nothing here because the gateway reports no condition for them.
 

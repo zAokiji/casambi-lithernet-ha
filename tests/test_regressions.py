@@ -1,6 +1,6 @@
 """Regression tests for the pitfalls of project document 2.5.
 
-Owned by package H. Every test here exists because the behaviour it checks was
+Every test here exists because the behaviour it checks was
 already wrong once, in the YAML setup this integration replaces. They run
 against the real gateway with a mocked broker, so a regression has to survive
 the whole chain to slip through, not just a unit test of one class.

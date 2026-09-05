@@ -1,7 +1,7 @@
 """Immutable state objects parsed from gateway messages.
 
-Owned by package A. Package B produces these, every platform consumes them.
-Nobody outside :mod:`.parser` touches raw JSON.
+:mod:`.parser` produces these, every platform consumes them. Nobody outside
+the parser touches raw JSON.
 
 Field names follow the gateway payloads (manual 5.6.2.1), including the
 gateway's own spelling where it deviates from English.

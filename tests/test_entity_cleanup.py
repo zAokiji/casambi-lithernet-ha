@@ -1,6 +1,6 @@
 """What an entity has to let go of when it is removed.
 
-Owned by package H. Runs against the real gateway with a mocked broker.
+Runs against the real gateway with a mocked broker.
 
 Two leaks are covered, both of which a test on the gateway's *topic* list would
 miss, because a topic several entities share stays subscribed either way:

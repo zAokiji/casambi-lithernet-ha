@@ -1,6 +1,6 @@
 """JSON payloads to state objects.
 
-Owned by package B. Pure functions, no logging and no exceptions: a payload
+Pure functions, no logging and no exceptions: a payload
 that is not usable produces ``None`` and the caller decides what to say about
 it. The gateway logs the first bad message per topic on warning and the rest
 on debug (project document 8).
@@ -12,6 +12,7 @@ here writes a key literally.
 from __future__ import annotations
 
 import json
+from math import isfinite
 from typing import Any
 
 from .const import (
@@ -161,5 +162,10 @@ def _as_int(value: Any) -> int | None:
     if isinstance(value, int):
         return value
     if isinstance(value, float):
+        # Infinity and NaN reach int() as an OverflowError or a ValueError,
+        # which would escape into the MQTT callback and leave the message
+        # uncounted and unlogged.
+        if not isfinite(value):
+            return None
         return int(value)
     return None

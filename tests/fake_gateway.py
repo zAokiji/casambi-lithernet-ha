@@ -1,6 +1,6 @@
 """Shared test doubles: an in-memory gateway and the payload helpers.
 
-Owned by package H. This code used to live inside ``test_entity.py``, which
+This code used to live inside ``test_entity.py``, which
 made four other test modules import from a test file. Everything more than one
 test module needs now lives here; ``test_entity.py`` re-exports it so the older
 imports keep working.

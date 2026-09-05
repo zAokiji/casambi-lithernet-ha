@@ -1,6 +1,6 @@
 """Package G: the two repair issues from section 8 of the project document.
 
-The fake gateway comes from ``test_entity.py`` (package E); this module only
+The fake gateway comes from ``test_entity.py`` ; this module only
 adds a message counter on top, because that is the single thing the "no state
 at all" watchdog looks at.
 """

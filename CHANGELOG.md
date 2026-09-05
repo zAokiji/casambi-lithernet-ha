@@ -45,3 +45,32 @@ aus. Erst danach wird 0.1.0 vergeben.
   Treiber werden daher blind bedient.
 - Casambi-Sensoren und -Taster brauchen neuere Firmware auf den Leuchten und
   sind noch nicht umgesetzt.
+
+### Aus der Code-Durchsicht behoben
+
+Fünf unabhängige Prüfungen des fertigen Codes, eine davon mit 45 gezielt
+eingebauten Fehlern zur Messung der Testreihe. Behoben wurden:
+
+- Vier Elementarten teilen sich einen Adressraum. Dieselbe Unit zweimal
+  angelegt, etwa als einfache Leuchte und als Leuchte mit Farbtemperatur,
+  erzeugte zwei Entitäten mit derselben Kennung; Home Assistant verwarf die
+  zweite stillschweigend.
+- Beide Reparaturhinweise blieben nach dem Entfernen der Integration für
+  immer stehen.
+- Das Verkleinern der Treiberzahl einer Unit ließ die verschwundenen
+  Entitäten dauerhaft als nicht verfügbar zurück.
+- Einschalten ohne Helligkeitsangabe sprang auf volle Helligkeit, statt den
+  vom Gateway gemeldeten Wert zu verwenden.
+- Der Blinktest ließ die Leuchte auf voller Helligkeit stehen, wenn der
+  Einrichtungsdialog währenddessen geschlossen wurde.
+- Ein fehlgeschlagenes MQTT-Abonnement verschwand spurlos, und der
+  Diagnose-Export meldete das Thema trotzdem als abonniert.
+- Das Bearbeiten eines unlesbar gewordenen Elements brach mit einem Fehler
+  ab, obwohl das der einzige Weg aus diesem Zustand ist.
+- Der Parser stürzte bei den JSON-Werten für Unendlich ab, statt die
+  Nachricht wie jede andere unbrauchbare zu verwerfen.
+
+Die Testreihe wurde um Prüfungen auf Leitungsebene erweitert, die für jede
+Entitätsart die vollständige Liste der gesendeten Nachrichten vergleichen,
+sowie um eine Vertragsreihe, die dieselben Zusagen gegen das echte Gateway und
+gegen die Test-Attrappe prüft.

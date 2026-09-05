@@ -1,6 +1,6 @@
 """Topic and payload building.
 
-Owned by package B. Everything in here is a pure function: parameters in,
+Everything in here is a pure function: parameters in,
 topic and payload out. Nothing touches MQTT, Home Assistant or the clock, so
 the whole command surface can be tested without a broker.
 

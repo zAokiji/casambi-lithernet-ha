@@ -1,7 +1,7 @@
 """Configuration data model.
 
-Owned by package A. Config flow (C), subentry flow (D) and every platform read
-and write these objects; nobody parses raw dictionaries.
+The config flow, the element flows and every platform read and write these
+objects; nobody parses raw dictionaries.
 
 Both directions are supported: :meth:`from_dict` accepts what Home Assistant
 stored in ``.storage``, :meth:`to_dict` produces what gets stored.

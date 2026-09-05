@@ -1,6 +1,6 @@
 """MQTT gateway implementation.
 
-Owned by package B. The only implementation of
+The only implementation of
 :class:`~.contracts.CasambiGateway`; entities never talk to MQTT themselves.
 
 Three promises the rest of the integration builds on:
@@ -82,7 +82,7 @@ ID_PLACEHOLDER = "<id>"
 _NUMERIC = re.compile(r"^\d+$")
 
 #: Parses a payload into one of the state objects, or returns None.
-type Parse = Callable[[str], Any | None]
+type Parse = Callable[[str | bytes], Any | None]
 
 
 def create_gateway(hass: HomeAssistant, config: GatewayConfig) -> CasambiGateway:
@@ -415,7 +415,9 @@ class MqttCasambiGateway(CasambiGateway):
         """Parse one message and hand it to everybody watching the topic."""
         self._messages_received += 1
         raw = message.payload
-        parsed = subscription.parse(raw if isinstance(raw, str) else str(raw))
+        # decode() takes str and bytes; str(bytes) would produce a repr that
+        # never parses.
+        parsed = subscription.parse(raw if isinstance(raw, (str, bytes)) else str(raw))
         if parsed is None:
             self._invalid_messages += 1
             self._log_invalid(subscription.topic, raw)

@@ -247,7 +247,8 @@
         "unknown": "Mit diesen Werten lässt sich das Element nicht speichern."
       },
       "abort": {
-        "reconfigure_successful": "Element aktualisiert."
+        "reconfigure_successful": "Element aktualisiert.",
+        "element_unreadable": "Dieses Element lässt sich nicht lesen. Entferne es und lege es neu an."
       },
       "initiate_flow": {
         "user": "Casambi-Element hinzufügen"

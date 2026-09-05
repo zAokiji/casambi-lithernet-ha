@@ -1,6 +1,6 @@
 """Fan platform for Casambi switching outputs used as a fan.
 
-Owned by package F, together with :mod:`.switch`, which holds the shared
+Belongs with :mod:`.switch`, which holds the shared
 behaviour and the module docstring that explains the kind ``switch``.
 
 This platform exists so a switching output can appear as a fan in the dashboard

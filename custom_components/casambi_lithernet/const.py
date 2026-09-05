@@ -1,7 +1,7 @@
 """Constants for the Casambi (Lithernet MQTT) integration.
 
-This module is owned by package A. Every other package imports from here and
-must not define topic strings, payload keys or magic numbers of its own.
+The single home for topic strings, payload keys and magic numbers. Nothing
+else in the integration defines them.
 
 All topic and payload names come from the Lithernet System Manual, chapter
 5.6 ("MQTT"), cross-checked against a live capture of the gateway on
@@ -58,6 +58,12 @@ DEFAULT_DURATION_MS: Final = 0
 DEFAULT_MIN_KELVIN: Final = 2700
 DEFAULT_MAX_KELVIN: Final = 6500
 DEFAULT_ON_LEVEL: Final = 255
+
+# What the colour temperature fields accept. Wider than any single luminaire on
+# purpose: the tunable white curve is only linear between the two values the
+# user enters, so the bounds are not a device limit.
+KELVIN_FORM_MIN: Final = 1000
+KELVIN_FORM_MAX: Final = 10000
 
 # Casambi levels are 0-255 on the wire; Home Assistant brightness is 0-255 too,
 # so no scaling is needed. Kept as names so intent stays readable.

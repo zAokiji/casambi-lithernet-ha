@@ -247,7 +247,8 @@
         "unknown": "This element cannot be stored with these values."
       },
       "abort": {
-        "reconfigure_successful": "Element updated."
+        "reconfigure_successful": "Element updated.",
+        "element_unreadable": "This element cannot be read. Remove it and add it again."
       },
       "initiate_flow": {
         "user": "Add Casambi element"

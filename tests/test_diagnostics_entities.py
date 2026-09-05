@@ -1,7 +1,7 @@
 """Package J: the diagnostic entities built from ``propertys``.
 
 The fake gateway, the setup helper and the payload converters come from
-``test_entity.py`` (package E); this module only adds what the diagnostic
+``test_entity.py`` ; this module only adds what the diagnostic
 entities need on top.
 """
 

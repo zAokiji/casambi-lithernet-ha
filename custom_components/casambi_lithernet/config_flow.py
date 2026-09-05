@@ -1,6 +1,6 @@
 """Guided setup of a gateway bridge, plus the options menu.
 
-Owned by package C. Implements the wizard from section 5 of the project
+Implements the wizard from section 5 of the project
 document:
 
 1. ``user`` — prerequisites. MQTT has to be set up; the broker address and
@@ -66,6 +66,8 @@ from .const import (
     DEFAULT_GATEWAY_HOST,
     DEFAULT_POLLING_METHOD,
     DOMAIN,
+    KELVIN_FORM_MAX,
+    KELVIN_FORM_MIN,
     SUBENTRY_TYPE_UNIT,
     UNIT_ID_MAX,
     UNIT_ID_MIN,
@@ -99,8 +101,6 @@ DEFAULT_MQTT_PORT: Final = 1883
 NOTHING: Final = "\u2013"
 SEEN: Final = "\u2713"
 
-KELVIN_FORM_MIN: Final = 1000
-KELVIN_FORM_MAX: Final = 10000
 DURATION_FORM_MAX: Final = 60000
 
 _POLLING_SELECTOR = SelectSelector(

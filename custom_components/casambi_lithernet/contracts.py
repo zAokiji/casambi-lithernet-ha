@@ -1,8 +1,9 @@
 """The interface every other package builds against.
 
-Owned by package A. Package B provides the one real implementation in
-``gateway.py``; packages C, E, F, J and K only ever see this interface, so they
-can be written before B is finished.
+:mod:`.gateway` provides the one real implementation; the config flow and
+every platform see only this interface. :class:`tests.fake_gateway.FakeGateway`
+is the second implementation, and ``tests/test_gateway_contract.py`` runs the
+same assertions against both.
 
 Rules that the implementation must honour, because the entities rely on them:
 

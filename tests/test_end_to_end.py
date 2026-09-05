@@ -1,6 +1,6 @@
 """End to end tests: the whole integration with mocked MQTT.
 
-Owned by package H. Every other test module puts a :class:`FakeGateway` in
+Every other test module puts a :class:`FakeGateway` in
 place of package B; this one does not. Here the real
 :class:`~custom_components.casambi_lithernet.gateway.MqttCasambiGateway` runs,
 and only the broker underneath it is a mock. A test therefore exercises the
