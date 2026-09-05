@@ -1,0 +1,316 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Casambi-Gateway",
+        "description": "Diese Integration spricht deine Casambi-Leuchten über ein Lithernet-Gateway per MQTT an.\n\nDer MQTT-Broker, den Home Assistant verwendet, ist `{broker}` auf Port `{port}`. Notiere dir das, du trägst es im nächsten Schritt im Gateway ein.\n\nDie Integration verbindet sich nie mit der Weboberfläche des Gateways. Die Einstellungen dort nimmst du selbst vor, dieser Assistent prüft danach, ob alles ankommt."
+      },
+      "gateway": {
+        "title": "Gateway mit MQTT verbinden",
+        "description": "Öffne die Weboberfläche des Gateways und gehe auf Control System.\n\nTrage unter **MQTT IP** die Broker-Adresse `{broker}` und den Port `{port}` ein, dazu einen Benutzer, den es auf deinem Broker gibt.\n\n**Achtung, zwei ähnliche Felder:** `IP-Settings` ist die Adresse des Gateways selbst. Der Broker gehört unter `Control System`. Eine Verwechslung erzeugt einen Adresskonflikt.\n\nDie Bridge-ID wird Teil jedes Topics und ist in den meisten Anlagen 0.",
+        "data": {
+          "gateway_host": "Adresse des Gateways",
+          "bridge_id": "Bridge-ID"
+        },
+        "data_description": {
+          "gateway_host": "Wird nur für den Link zur Weboberfläche verwendet. Die Integration verbindet sich nie dorthin.",
+          "bridge_id": "Die Zahl in Topics wie casambi/0/set/target_level."
+        }
+      },
+      "polling": {
+        "title": "Polling-Methode",
+        "description": "Im Gateway unter Casambi Settings entscheidet sich, ob Home Assistant überhaupt Zustände sieht.\n\n**inactive** sendet nichts. Befehle funktionieren, Home Assistant bleibt blind.\n**active** fragt alle Units zyklisch ab, rund sieben Sekunden Verzögerung.\n**passive_37_80** meldet Änderungen sofort, etwa 0,16 Sekunden, und fragt in ruhigen Zeiten zusätzlich ab. Das ist die empfohlene Einstellung.\n**passive_37_90** und **passive_39_52** sind noch schneller, brauchen aber neuere Casambi-Firmware auf den Leuchten selbst.\n\nPrüfe auch den Poll-Bereich: er muss alle Unit-IDs abdecken, die du verwenden willst.\n\nWähle aus, was du im Gateway eingestellt hast.",
+        "data": {
+          "polling_method": "Im Gateway eingestellte Polling-Methode"
+        }
+      },
+      "hints": {
+        "title": "Zwei weitere Einstellungen",
+        "description": "**Use Broadcast** bleibt aus. Der Schalter steuert Bluetooth-Broadcast und hat mit MQTT nichts zu tun.\n\nGib dem Gateway eine **feste IP-Adresse**, damit seine Weboberfläche erreichbar bleibt.\n\nWenn beides erledigt ist, geht es zur Prüfung."
+      },
+      "verify_command": {
+        "title": "Prüfung: kommen Befehle an?",
+        "description": "Gib die Casambi-Unit-ID einer Leuchte ein, die du gerade sehen kannst. Sie geht kurz auf volle Helligkeit und danach wieder aus.",
+        "data": {
+          "test_unit_id": "Unit-ID"
+        }
+      },
+      "verify_blink": {
+        "title": "Hat die Leuchte reagiert?",
+        "description": "Unit {unit_id} wurde auf volle Helligkeit und wieder auf aus gesetzt.",
+        "menu_options": {
+          "blink_yes": "Ja, sie hat reagiert",
+          "blink_repeat": "Wiederholen",
+          "blink_no": "Nein, nichts passiert"
+        }
+      },
+      "blink_no": {
+        "title": "Befehle kommen nicht an",
+        "description": "Prüfe diese drei Punkte im Gateway:\n\n1. **MQTT IP** zeigt auf `{broker}`, nicht auf das Gateway selbst.\n2. **Benutzer und Passwort** gibt es auf deinem Broker.\n3. Die **Bridge-ID** stimmt mit der hier eingetragenen überein ({bridge_id}).\n\nDanach noch einmal versuchen.",
+        "menu_options": {
+          "verify_command": "Noch einmal versuchen",
+          "verify_state": "Überspringen und weiter"
+        }
+      },
+      "verify_state": {
+        "title": "Prüfung: kommen Zustände zurück?",
+        "description": "Bediene jetzt eine beliebige Leuchte in der Casambi-App. Die Integration hört {seconds} Sekunden lang mit und meldet, was ankommt."
+      },
+      "verify_state_result": {
+        "title": "Ergebnis der Zustandsprüfung",
+        "description": "{summary}",
+        "menu_options": {
+          "finish": "Einrichtung abschließen",
+          "verify_state": "Noch einmal mithören"
+        }
+      },
+      "no_state": {
+        "title": "Es kommen keine Zustände",
+        "description": "Während der Prüfung kam nichts zurück. Die mit Abstand wahrscheinlichste Ursache ist die Polling-Methode **inactive** im Gateway.\n\nDu kannst sie einstellen und noch einmal mithören oder jetzt fortfahren. Ohne Zustände muss jede Leuchte blind bedient werden, was Home Assistant als Gerät mit getrennten Ein- und Aus-Knöpfen darstellt.",
+        "menu_options": {
+          "verify_state": "Noch einmal mithören",
+          "finish": "Trotzdem fortfahren"
+        }
+      }
+    },
+    "error": {
+      "unit_id_invalid": "Gib eine Unit-ID zwischen 1 und 250 ein.",
+      "bridge_id_invalid": "Gib eine Bridge-ID zwischen 0 und 255 ein."
+    },
+    "abort": {
+      "mqtt_missing": "Die MQTT-Integration ist nicht eingerichtet. Installiere das Mosquitto-Add-on, füge die MQTT-Integration hinzu und starte dann erneut.",
+      "already_configured": "Diese Bridge ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Casambi-Gateway",
+        "menu_options": {
+          "settings": "Standardwerte",
+          "verify": "Verbindung prüfen"
+        }
+      },
+      "settings": {
+        "title": "Standardwerte",
+        "description": "Diese Werte belegen neue Elemente vor und gelten dort, wo ein Element sie nicht überschreibt.",
+        "data": {
+          "polling_method": "Im Gateway eingestellte Polling-Methode",
+          "default_duration_ms": "Übergangszeit in Millisekunden",
+          "default_min_kelvin": "Niedrigste Farbtemperatur",
+          "default_max_kelvin": "Höchste Farbtemperatur",
+          "gateway_host": "Adresse des Gateways"
+        }
+      },
+      "verify": {
+        "title": "Verbindung prüfen",
+        "description": "Hört {seconds} Sekunden lang am Gateway mit. Bediene währenddessen eine Leuchte in der Casambi-App."
+      },
+      "verify_result": {
+        "title": "Ergebnis",
+        "description": "{summary}"
+      }
+    }
+  },
+  "config_subentries": {
+    "unit": {
+      "title": "Casambi-Element",
+      "step": {
+        "user": {
+          "title": "Was möchtest du hinzufügen?",
+          "menu_options": {
+            "simple": "Dimmbare Leuchte",
+            "tunable_white": "Leuchte mit Farbtemperatur",
+            "multi_dali": "Eine Unit mit mehreren DALI-Treibern",
+            "group": "Casambi-Gruppe",
+            "switch": "Schaltausgang, zum Beispiel ein Lüfter",
+            "scene": "Casambi-Szene",
+            "broadcast": "Alle Leuchten auf einmal"
+          }
+        },
+        "simple": {
+          "title": "Dimmbare Leuchte",
+          "description": "Eine einzelne Casambi-Unit, die geschaltet und gedimmt werden kann.",
+          "data": {
+            "name": "Name",
+            "target_id": "Unit-ID",
+            "default_on_level": "Helligkeit beim Einschalten ohne Wert",
+            "optimistic_override": "Blind bedienen"
+          },
+          "data_description": {
+            "target_id": "Die Adresse der Unit im Casambi-Netz, 1 bis 250.",
+            "optimistic_override": "Einschalten, wenn diese Unit außerhalb des Poll-Bereichs liegt und nie einen Zustand meldet."
+          }
+        },
+        "tunable_white": {
+          "title": "Leuchte mit Farbtemperatur",
+          "description": "Das Gateway meldet die Farbtemperatur nicht zurück, deshalb merkt sich Home Assistant den zuletzt gesendeten Wert.",
+          "data": {
+            "name": "Name",
+            "target_id": "Unit-ID",
+            "min_kelvin": "Niedrigste Farbtemperatur",
+            "max_kelvin": "Höchste Farbtemperatur",
+            "default_on_level": "Helligkeit beim Einschalten ohne Wert",
+            "optimistic_override": "Blind bedienen"
+          }
+        },
+        "multi_dali": {
+          "title": "Unit mit mehreren DALI-Treibern",
+          "description": "Eine Casambi-Unit steuert mehrere Leuchten. Jeder Treiber wird eine eigene Entität.\n\nDas Gateway meldet nur einen Mischwert für die ganze Unit, deshalb werden die einzelnen Entitäten blind bedient.",
+          "data": {
+            "name": "Name",
+            "target_id": "Unit-ID",
+            "dimmer_count": "Anzahl der Treiber",
+            "dimmer_names": "Namen der Treiber",
+            "with_total_entity": "Entität für die ganze Unit anlegen",
+            "default_on_level": "Helligkeit beim Einschalten ohne Wert"
+          },
+          "data_description": {
+            "dimmer_names": "Ein Name pro Zeile. Leer lassen, um sie durchzunummerieren.",
+            "with_total_entity": "Setzt alle Treiber gemeinsam mit einem Befehl."
+          }
+        },
+        "group": {
+          "title": "Casambi-Gruppe",
+          "description": "Steuert eine in der Casambi-App angelegte Gruppe mit einem einzigen Funkbefehl.\n\nUm Entitäten nur in Home Assistant zusammenzufassen, ist eine Home-Assistant-Lichtgruppe das bessere Werkzeug.",
+          "data": {
+            "name": "Name",
+            "target_id": "Gruppen-ID",
+            "default_on_level": "Helligkeit beim Einschalten ohne Wert"
+          }
+        },
+        "switch": {
+          "title": "Schaltausgang",
+          "description": "Eine Casambi-Unit, die nur ein und aus kennt, etwa ein Lüfter.\n\nEin Nachlauf gehört in eine Home-Assistant-Automation, nicht hierher.",
+          "data": {
+            "name": "Name",
+            "target_id": "Unit-ID",
+            "switch_domain": "Darstellen als"
+          },
+          "data_description": {
+            "switch_domain": "Ein Lüfter bekommt ein Lüfter-Symbol und wird von Sprachassistenten als Lüfter erkannt."
+          }
+        },
+        "scene": {
+          "title": "Casambi-Szene",
+          "description": "Ruft eine in der Casambi-App angelegte Szene auf. Das Gateway meldet zurück, ob die Szene aktiv ist.",
+          "data": {
+            "name": "Name",
+            "target_id": "Szenen-ID",
+            "default_on_level": "Helligkeit beim Aufruf ohne Wert"
+          }
+        },
+        "broadcast": {
+          "title": "Alle Leuchten",
+          "description": "Setzt mit einem Befehl jede Leuchte im Netz. Die gemeldete Helligkeit ist ein Mittelwert über das Netz.",
+          "data": {
+            "name": "Name"
+          }
+        },
+        "reconfigure": {
+          "title": "Element bearbeiten",
+          "description": "Art und Adresse lassen sich nicht ändern. Entferne das Element und lege es neu an, um daran etwas zu ändern."
+        }
+      },
+      "error": {
+        "target_id_invalid": "Diese Adresse liegt außerhalb des erlaubten Bereichs.",
+        "duplicate_target": "Für diese Adresse gibt es bereits ein Element dieser Art.",
+        "name_required": "Gib dem Element einen Namen.",
+        "kelvin_range": "Die niedrigste Farbtemperatur muss unter der höchsten liegen.",
+        "dimmer_count_invalid": "Gib zwischen 1 und 8 Treibern an.",
+        "too_many_names": "Du hast mehr Namen angegeben, als es Treiber gibt."
+      },
+      "abort": {
+        "reconfigure_successful": "Element aktualisiert."
+      },
+      "initiate_flow": {
+        "user": "Casambi-Element hinzufügen"
+      },
+      "entry_type": "Casambi-Element"
+    }
+  },
+  "entity": {
+    "light": {
+      "total": {
+        "name": "Alle Treiber"
+      }
+    },
+    "binary_sensor": {
+      "problem": {
+        "name": "Problem"
+      }
+    },
+    "sensor": {
+      "condition": {
+        "name": "Zustand",
+        "state": {
+          "ok": "In Ordnung",
+          "overheated": "Überhitzt",
+          "overload": "Überlast",
+          "thermal_overload": "Thermische Überlast",
+          "lamp_failure": "Leuchtmittelausfall",
+          "driver_failure": "Treiberausfall",
+          "incompatible_hw": "Inkompatible Hardware",
+          "hw_not_found": "Hardware nicht gefunden",
+          "configuration_failed": "Konfiguration fehlgeschlagen",
+          "unknown": "Unbekannt"
+        }
+      },
+      "priority_source": {
+        "name": "Steuerungsquelle",
+        "state": {
+          "none": "Keine",
+          "emergency": "Notbeleuchtung",
+          "bms_override": "Gebäudeleittechnik",
+          "manual_control": "Handbedienung",
+          "presence": "Präsenzmelder",
+          "date_timer": "Datums-Timer",
+          "clock_timer": "Zeitschaltuhr",
+          "startup": "Start",
+          "automation": "Casambi-Automation",
+          "unknown": "Unbekannt"
+        }
+      },
+      "battery_level": {
+        "name": "Batteriestand"
+      },
+      "ambient_temperature": {
+        "name": "Umgebungstemperatur"
+      },
+      "overheating": {
+        "name": "Überhitzung"
+      },
+      "general_failure": {
+        "name": "Allgemeiner Fehler"
+      }
+    }
+  },
+  "issues": {
+    "mqtt_missing": {
+      "title": "MQTT ist nicht verfügbar",
+      "description": "Die Casambi-Integration spricht über die MQTT-Integration mit dem Gateway, diese ist nicht eingerichtet. Füge die MQTT-Integration hinzu und lade Casambi danach neu."
+    },
+    "no_state_received": {
+      "title": "Keine Zustände vom Casambi-Gateway",
+      "description": "Seit einem Tag ist vom Gateway nichts angekommen, obwohl die Polling-Methode hier nicht auf inactive steht.\n\nPrüfe im Gateway unter Casambi Settings, ob **Polling Method** auf `passive_37_80` steht und der Poll-Bereich alle deine Unit-IDs abdeckt."
+    }
+  },
+  "selector": {
+    "polling_method": {
+      "options": {
+        "inactive": "inactive: sendet keine Zustände",
+        "active": "active: zyklisch, rund 7 Sekunden",
+        "passive": "passive: bei Änderung",
+        "passive_37_80": "passive_37_80: bei Änderung, rund 0,16 Sekunden (empfohlen)",
+        "passive_37_90": "passive_37_90: bei Änderung, braucht Casambi 37.90",
+        "passive_39_52": "passive_39_52: bei Änderung, braucht Casambi 39.52"
+      }
+    },
+    "switch_domain": {
+      "options": {
+        "switch": "Schalter",
+        "fan": "Lüfter"
+      }
+    }
+  }
+}

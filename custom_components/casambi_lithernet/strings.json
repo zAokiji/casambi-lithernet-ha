@@ -1,0 +1,316 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Casambi gateway",
+        "description": "This integration talks to your Casambi luminaires through a Lithernet gateway over MQTT.\n\nThe MQTT broker Home Assistant uses is `{broker}` on port `{port}`. Note it down, you will enter it in the gateway in the next step.\n\nThe integration never connects to the gateway's web interface. You make the settings there yourself, and this wizard checks afterwards that everything arrives."
+      },
+      "gateway": {
+        "title": "Connect the gateway to MQTT",
+        "description": "Open the gateway's web interface and go to Control System.\n\nEnter the broker address `{broker}` and port `{port}` under **MQTT IP**, plus a user that exists on your broker.\n\n**Careful, two similar fields:** `IP-Settings` is the gateway's own address. The broker belongs under `Control System`. Mixing them up creates an address conflict.\n\nThe bridge ID becomes part of every topic and is 0 in most installations.",
+        "data": {
+          "gateway_host": "Gateway address",
+          "bridge_id": "Bridge ID"
+        },
+        "data_description": {
+          "gateway_host": "Only used for the link to the web interface. The integration never connects there.",
+          "bridge_id": "The number in topics such as casambi/0/set/target_level."
+        }
+      },
+      "polling": {
+        "title": "Polling method",
+        "description": "In the gateway under Casambi Settings you decide whether Home Assistant sees any state at all.\n\n**inactive** sends nothing. Commands work, Home Assistant stays blind.\n**active** polls all units in a cycle, roughly seven seconds delay.\n**passive_37_80** reports changes immediately, about 0.16 seconds, and polls in quiet periods. This is the recommended setting.\n**passive_37_90** and **passive_39_52** are faster still but need newer Casambi firmware on the luminaires themselves.\n\nAlso check the poll range: it has to cover every unit ID you want to use.\n\nSelect what you set in the gateway.",
+        "data": {
+          "polling_method": "Polling method set in the gateway"
+        }
+      },
+      "hints": {
+        "title": "Two more settings",
+        "description": "**Use Broadcast** stays off. It controls Bluetooth broadcast and has nothing to do with MQTT.\n\nGive the gateway a **fixed IP address** so its web interface stays reachable.\n\nWhen both are done, continue to the check."
+      },
+      "verify_command": {
+        "title": "Check: do commands arrive?",
+        "description": "Enter the Casambi unit ID of a luminaire you can see right now. It will switch to full brightness briefly and then off again.",
+        "data": {
+          "test_unit_id": "Unit ID"
+        }
+      },
+      "verify_blink": {
+        "title": "Did the luminaire react?",
+        "description": "Unit {unit_id} was told to go to full brightness and back off.",
+        "menu_options": {
+          "blink_yes": "Yes, it reacted",
+          "blink_repeat": "Repeat",
+          "blink_no": "No, nothing happened"
+        }
+      },
+      "blink_no": {
+        "title": "Commands do not arrive",
+        "description": "Check these three things in the gateway:\n\n1. **MQTT IP** points at `{broker}`, not at the gateway itself.\n2. The **user and password** exist on your broker.\n3. The **bridge ID** matches the one you entered here ({bridge_id}).\n\nThen try again.",
+        "menu_options": {
+          "verify_command": "Try again",
+          "verify_state": "Skip and continue"
+        }
+      },
+      "verify_state": {
+        "title": "Check: does state come back?",
+        "description": "Now operate any luminaire in the Casambi app. The integration listens for {seconds} seconds and reports what arrives."
+      },
+      "verify_state_result": {
+        "title": "Result of the state check",
+        "description": "{summary}",
+        "menu_options": {
+          "finish": "Finish setup",
+          "verify_state": "Listen again"
+        }
+      },
+      "no_state": {
+        "title": "No state arrives",
+        "description": "Nothing came back during the check. By far the most likely cause is the polling method being set to **inactive** in the gateway.\n\nYou can set it and listen again, or continue now. Without state every luminaire has to be operated blind, which Home Assistant shows as a device with separate on and off buttons.",
+        "menu_options": {
+          "verify_state": "Listen again",
+          "finish": "Continue anyway"
+        }
+      }
+    },
+    "error": {
+      "unit_id_invalid": "Enter a unit ID between 1 and 250.",
+      "bridge_id_invalid": "Enter a bridge ID between 0 and 255."
+    },
+    "abort": {
+      "mqtt_missing": "The MQTT integration is not set up. Install the Mosquitto add-on, add the MQTT integration and start again.",
+      "already_configured": "This bridge is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Casambi gateway",
+        "menu_options": {
+          "settings": "Defaults",
+          "verify": "Check connection"
+        }
+      },
+      "settings": {
+        "title": "Defaults",
+        "description": "These values prefill new elements and apply where an element does not override them.",
+        "data": {
+          "polling_method": "Polling method set in the gateway",
+          "default_duration_ms": "Transition time in milliseconds",
+          "default_min_kelvin": "Lowest colour temperature",
+          "default_max_kelvin": "Highest colour temperature",
+          "gateway_host": "Gateway address"
+        }
+      },
+      "verify": {
+        "title": "Check connection",
+        "description": "Listens to the gateway for {seconds} seconds. Operate a luminaire in the Casambi app while it runs."
+      },
+      "verify_result": {
+        "title": "Result",
+        "description": "{summary}"
+      }
+    }
+  },
+  "config_subentries": {
+    "unit": {
+      "title": "Casambi element",
+      "step": {
+        "user": {
+          "title": "What do you want to add?",
+          "menu_options": {
+            "simple": "Dimmable luminaire",
+            "tunable_white": "Luminaire with colour temperature",
+            "multi_dali": "One unit with several DALI drivers",
+            "group": "Casambi group",
+            "switch": "Switching output, for example a fan",
+            "scene": "Casambi scene",
+            "broadcast": "All luminaires at once"
+          }
+        },
+        "simple": {
+          "title": "Dimmable luminaire",
+          "description": "A single Casambi unit that can be switched and dimmed.",
+          "data": {
+            "name": "Name",
+            "target_id": "Unit ID",
+            "default_on_level": "Brightness when switched on without a value",
+            "optimistic_override": "Operate blind"
+          },
+          "data_description": {
+            "target_id": "The address of the unit in the Casambi network, 1 to 250.",
+            "optimistic_override": "Turn on when this unit lies outside the gateway's poll range and never reports state."
+          }
+        },
+        "tunable_white": {
+          "title": "Luminaire with colour temperature",
+          "description": "The gateway does not report colour temperature back, so Home Assistant remembers the value it last sent.",
+          "data": {
+            "name": "Name",
+            "target_id": "Unit ID",
+            "min_kelvin": "Lowest colour temperature",
+            "max_kelvin": "Highest colour temperature",
+            "default_on_level": "Brightness when switched on without a value",
+            "optimistic_override": "Operate blind"
+          }
+        },
+        "multi_dali": {
+          "title": "Unit with several DALI drivers",
+          "description": "One Casambi unit drives several luminaires. Each driver becomes its own entity.\n\nThe gateway only reports a mixed value for the whole unit, so the individual entities are operated blind.",
+          "data": {
+            "name": "Name",
+            "target_id": "Unit ID",
+            "dimmer_count": "Number of drivers",
+            "dimmer_names": "Names of the drivers",
+            "with_total_entity": "Add an entity for the whole unit",
+            "default_on_level": "Brightness when switched on without a value"
+          },
+          "data_description": {
+            "dimmer_names": "One name per line. Leave empty to number them.",
+            "with_total_entity": "Sets all drivers together with one command."
+          }
+        },
+        "group": {
+          "title": "Casambi group",
+          "description": "Controls a group defined in the Casambi app with a single radio command.\n\nFor merely grouping entities in Home Assistant, a Home Assistant light group is the better tool.",
+          "data": {
+            "name": "Name",
+            "target_id": "Group ID",
+            "default_on_level": "Brightness when switched on without a value"
+          }
+        },
+        "switch": {
+          "title": "Switching output",
+          "description": "A Casambi unit that only knows on and off, such as a fan.\n\nAny run-on time belongs in a Home Assistant automation, not here.",
+          "data": {
+            "name": "Name",
+            "target_id": "Unit ID",
+            "switch_domain": "Show as"
+          },
+          "data_description": {
+            "switch_domain": "A fan gets a fan icon and is recognised as a fan by voice assistants."
+          }
+        },
+        "scene": {
+          "title": "Casambi scene",
+          "description": "Recalls a scene defined in the Casambi app. The gateway reports whether the scene is active.",
+          "data": {
+            "name": "Name",
+            "target_id": "Scene ID",
+            "default_on_level": "Brightness when recalled without a value"
+          }
+        },
+        "broadcast": {
+          "title": "All luminaires",
+          "description": "Sets every luminaire in the network with one command. The reported brightness is an average across the network.",
+          "data": {
+            "name": "Name"
+          }
+        },
+        "reconfigure": {
+          "title": "Edit element",
+          "description": "The kind and the address cannot be changed. Remove the element and add it again to change those."
+        }
+      },
+      "error": {
+        "target_id_invalid": "This address is outside the allowed range.",
+        "duplicate_target": "An element of this kind already exists for this address.",
+        "name_required": "Give the element a name.",
+        "kelvin_range": "The lowest colour temperature has to be below the highest.",
+        "dimmer_count_invalid": "Enter between 1 and 8 drivers.",
+        "too_many_names": "You gave more names than there are drivers."
+      },
+      "abort": {
+        "reconfigure_successful": "Element updated."
+      },
+      "initiate_flow": {
+        "user": "Add Casambi element"
+      },
+      "entry_type": "Casambi element"
+    }
+  },
+  "entity": {
+    "light": {
+      "total": {
+        "name": "All drivers"
+      }
+    },
+    "binary_sensor": {
+      "problem": {
+        "name": "Problem"
+      }
+    },
+    "sensor": {
+      "condition": {
+        "name": "Condition",
+        "state": {
+          "ok": "OK",
+          "overheated": "Overheated",
+          "overload": "Overload",
+          "thermal_overload": "Thermal overload",
+          "lamp_failure": "Lamp failure",
+          "driver_failure": "Driver failure",
+          "incompatible_hw": "Incompatible hardware",
+          "hw_not_found": "Hardware not found",
+          "configuration_failed": "Configuration failed",
+          "unknown": "Unknown"
+        }
+      },
+      "priority_source": {
+        "name": "Control source",
+        "state": {
+          "none": "None",
+          "emergency": "Emergency lighting",
+          "bms_override": "Building management override",
+          "manual_control": "Manual control",
+          "presence": "Presence detection",
+          "date_timer": "Date timer",
+          "clock_timer": "Clock timer",
+          "startup": "Start-up",
+          "automation": "Casambi automation",
+          "unknown": "Unknown"
+        }
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "ambient_temperature": {
+        "name": "Ambient temperature"
+      },
+      "overheating": {
+        "name": "Overheating"
+      },
+      "general_failure": {
+        "name": "General failure"
+      }
+    }
+  },
+  "issues": {
+    "mqtt_missing": {
+      "title": "MQTT is not available",
+      "description": "The Casambi integration talks to the gateway through the MQTT integration, which is not set up. Add the MQTT integration, then reload Casambi."
+    },
+    "no_state_received": {
+      "title": "No state from the Casambi gateway",
+      "description": "Nothing has arrived from the gateway for a day, although the polling method is not set to inactive here.\n\nCheck in the gateway under Casambi Settings that **Polling Method** is set to `passive_37_80` and that the poll range covers all your unit IDs."
+    }
+  },
+  "selector": {
+    "polling_method": {
+      "options": {
+        "inactive": "inactive: sends no state",
+        "active": "active: cyclic, about 7 seconds",
+        "passive": "passive: on change",
+        "passive_37_80": "passive_37_80: on change, about 0.16 seconds (recommended)",
+        "passive_37_90": "passive_37_90: on change, needs Casambi 37.90",
+        "passive_39_52": "passive_39_52: on change, needs Casambi 39.52"
+      }
+    },
+    "switch_domain": {
+      "options": {
+        "switch": "Switch",
+        "fan": "Fan"
+      }
+    }
+  }
+}
