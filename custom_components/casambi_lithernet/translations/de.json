@@ -147,7 +147,7 @@
           },
           "data_description": {
             "target_id": "Die Adresse der Unit im Casambi-Netz, 1 bis 250.",
-            "optimistic_override": "Einschalten, wenn diese Unit außerhalb des Poll-Bereichs liegt und nie einen Zustand meldet."
+            "optimistic_override": "Zeigt sofort den gesendeten Zustand an, statt auf die Bestätigung des Gateways zu warten. Verhindert das Zurückspringen des Schalters, wenn das Gateway spät oder gar nicht antwortet; dafür wird ein Befehl, der die Leuchte nie erreicht hat, als ausgeführt angezeigt."
           }
         },
         "tunable_white": {
@@ -160,6 +160,9 @@
             "max_kelvin": "Höchste Farbtemperatur",
             "default_on_level": "Helligkeit beim Einschalten ohne Wert",
             "optimistic_override": "Blind bedienen"
+          },
+          "data_description": {
+            "optimistic_override": "Zeigt sofort den gesendeten Zustand an, statt auf die Bestätigung des Gateways zu warten. Verhindert das Zurückspringen des Schalters, wenn das Gateway spät oder gar nicht antwortet; dafür wird ein Befehl, der die Leuchte nie erreicht hat, als ausgeführt angezeigt."
           }
         },
         "multi_dali": {
@@ -171,11 +174,13 @@
             "dimmer_count": "Anzahl der Treiber",
             "dimmer_names": "Namen der Treiber",
             "with_total_entity": "Entität für die ganze Unit anlegen",
-            "default_on_level": "Helligkeit beim Einschalten ohne Wert"
+            "default_on_level": "Helligkeit beim Einschalten ohne Wert",
+            "optimistic_override": "Blind bedienen"
           },
           "data_description": {
             "dimmer_names": "Ein Name pro Zeile. Leer lassen, um sie durchzunummerieren.",
-            "with_total_entity": "Setzt alle Treiber gemeinsam mit einem Befehl."
+            "with_total_entity": "Setzt alle Treiber gemeinsam mit einem Befehl.",
+            "optimistic_override": "Zeigt sofort den gesendeten Zustand an, statt auf die Bestätigung des Gateways zu warten. Verhindert das Zurückspringen des Schalters, wenn das Gateway spät oder gar nicht antwortet; dafür wird ein Befehl, der die Leuchte nie erreicht hat, als ausgeführt angezeigt."
           }
         },
         "group": {
@@ -184,7 +189,11 @@
           "data": {
             "name": "Name",
             "target_id": "Gruppen-ID",
-            "default_on_level": "Helligkeit beim Einschalten ohne Wert"
+            "default_on_level": "Helligkeit beim Einschalten ohne Wert",
+            "optimistic_override": "Blind bedienen"
+          },
+          "data_description": {
+            "optimistic_override": "Zeigt sofort den gesendeten Zustand an, statt auf die Bestätigung des Gateways zu warten. Verhindert das Zurückspringen des Schalters, wenn das Gateway spät oder gar nicht antwortet; dafür wird ein Befehl, der die Leuchte nie erreicht hat, als ausgeführt angezeigt."
           }
         },
         "switch": {
@@ -193,10 +202,12 @@
           "data": {
             "name": "Name",
             "target_id": "Unit-ID",
-            "switch_domain": "Darstellen als"
+            "switch_domain": "Darstellen als",
+            "optimistic_override": "Blind bedienen"
           },
           "data_description": {
-            "switch_domain": "Ein Lüfter bekommt ein Lüfter-Symbol und wird von Sprachassistenten als Lüfter erkannt."
+            "switch_domain": "Ein Lüfter bekommt ein Lüfter-Symbol und wird von Sprachassistenten als Lüfter erkannt.",
+            "optimistic_override": "Zeigt sofort den gesendeten Zustand an, statt auf die Bestätigung des Gateways zu warten. Verhindert das Zurückspringen des Schalters, wenn das Gateway spät oder gar nicht antwortet; dafür wird ein Befehl, der die Leuchte nie erreicht hat, als ausgeführt angezeigt."
           }
         },
         "scene": {
@@ -205,7 +216,11 @@
           "data": {
             "name": "Name",
             "target_id": "Szenen-ID",
-            "default_on_level": "Helligkeit beim Aufruf ohne Wert"
+            "default_on_level": "Helligkeit beim Aufruf ohne Wert",
+            "optimistic_override": "Blind bedienen"
+          },
+          "data_description": {
+            "optimistic_override": "Zeigt sofort den gesendeten Zustand an, statt auf die Bestätigung des Gateways zu warten. Verhindert das Zurückspringen des Schalters, wenn das Gateway spät oder gar nicht antwortet; dafür wird ein Befehl, der die Leuchte nie erreicht hat, als ausgeführt angezeigt."
           }
         },
         "broadcast": {
@@ -232,7 +247,7 @@
           "data_description": {
             "dimmer_names": "Ein Name pro Zeile. Leer lassen, um sie durchzunummerieren.",
             "with_total_entity": "Setzt alle Treiber gemeinsam mit einem Befehl.",
-            "optimistic_override": "Einschalten, wenn diese Unit außerhalb des Poll-Bereichs liegt und nie einen Zustand meldet.",
+            "optimistic_override": "Zeigt sofort den gesendeten Zustand an, statt auf die Bestätigung des Gateways zu warten. Verhindert das Zurückspringen des Schalters, wenn das Gateway spät oder gar nicht antwortet; dafür wird ein Befehl, der die Leuchte nie erreicht hat, als ausgeführt angezeigt.",
             "switch_domain": "Ein Lüfter bekommt ein Lüfter-Symbol und wird von Sprachassistenten als Lüfter erkannt."
           }
         }

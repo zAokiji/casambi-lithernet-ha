@@ -147,7 +147,7 @@
           },
           "data_description": {
             "target_id": "The address of the unit in the Casambi network, 1 to 250.",
-            "optimistic_override": "Turn on when this unit lies outside the gateway's poll range and never reports state."
+            "optimistic_override": "Show the state Home Assistant sent right away instead of waiting for the gateway to confirm it. Stops the toggle from jumping back when the gateway answers late or not at all; in return a command that never reached the luminaire is shown as if it had."
           }
         },
         "tunable_white": {
@@ -160,6 +160,9 @@
             "max_kelvin": "Highest colour temperature",
             "default_on_level": "Brightness when switched on without a value",
             "optimistic_override": "Operate blind"
+          },
+          "data_description": {
+            "optimistic_override": "Show the state Home Assistant sent right away instead of waiting for the gateway to confirm it. Stops the toggle from jumping back when the gateway answers late or not at all; in return a command that never reached the luminaire is shown as if it had."
           }
         },
         "multi_dali": {
@@ -171,11 +174,13 @@
             "dimmer_count": "Number of drivers",
             "dimmer_names": "Names of the drivers",
             "with_total_entity": "Add an entity for the whole unit",
-            "default_on_level": "Brightness when switched on without a value"
+            "default_on_level": "Brightness when switched on without a value",
+            "optimistic_override": "Operate blind"
           },
           "data_description": {
             "dimmer_names": "One name per line. Leave empty to number them.",
-            "with_total_entity": "Sets all drivers together with one command."
+            "with_total_entity": "Sets all drivers together with one command.",
+            "optimistic_override": "Show the state Home Assistant sent right away instead of waiting for the gateway to confirm it. Stops the toggle from jumping back when the gateway answers late or not at all; in return a command that never reached the luminaire is shown as if it had."
           }
         },
         "group": {
@@ -184,7 +189,11 @@
           "data": {
             "name": "Name",
             "target_id": "Group ID",
-            "default_on_level": "Brightness when switched on without a value"
+            "default_on_level": "Brightness when switched on without a value",
+            "optimistic_override": "Operate blind"
+          },
+          "data_description": {
+            "optimistic_override": "Show the state Home Assistant sent right away instead of waiting for the gateway to confirm it. Stops the toggle from jumping back when the gateway answers late or not at all; in return a command that never reached the luminaire is shown as if it had."
           }
         },
         "switch": {
@@ -193,10 +202,12 @@
           "data": {
             "name": "Name",
             "target_id": "Unit ID",
-            "switch_domain": "Show as"
+            "switch_domain": "Show as",
+            "optimistic_override": "Operate blind"
           },
           "data_description": {
-            "switch_domain": "A fan gets a fan icon and is recognised as a fan by voice assistants."
+            "switch_domain": "A fan gets a fan icon and is recognised as a fan by voice assistants.",
+            "optimistic_override": "Show the state Home Assistant sent right away instead of waiting for the gateway to confirm it. Stops the toggle from jumping back when the gateway answers late or not at all; in return a command that never reached the luminaire is shown as if it had."
           }
         },
         "scene": {
@@ -205,7 +216,11 @@
           "data": {
             "name": "Name",
             "target_id": "Scene ID",
-            "default_on_level": "Brightness when recalled without a value"
+            "default_on_level": "Brightness when recalled without a value",
+            "optimistic_override": "Operate blind"
+          },
+          "data_description": {
+            "optimistic_override": "Show the state Home Assistant sent right away instead of waiting for the gateway to confirm it. Stops the toggle from jumping back when the gateway answers late or not at all; in return a command that never reached the luminaire is shown as if it had."
           }
         },
         "broadcast": {
@@ -232,7 +247,7 @@
           "data_description": {
             "dimmer_names": "One name per line. Leave empty to number them.",
             "with_total_entity": "Sets all drivers together with one command.",
-            "optimistic_override": "Turn on when this unit lies outside the gateway's poll range and never reports state.",
+            "optimistic_override": "Show the state Home Assistant sent right away instead of waiting for the gateway to confirm it. Stops the toggle from jumping back when the gateway answers late or not at all; in return a command that never reached the luminaire is shown as if it had.",
             "switch_domain": "A fan gets a fan icon and is recognised as a fan by voice assistants."
           }
         }

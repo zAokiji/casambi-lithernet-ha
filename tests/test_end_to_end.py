@@ -214,7 +214,14 @@ async def test_multi_dali_round_trip(
     await feed_retained(
         hass, f"{BASE}/get/poll_device/15/values", payload("unit_values_on")
     )
-    total = hass.states.get("light.wohnzimmer")
+    # The total entity carries its translated name ("Wohnzimmer All drivers"),
+    # so it is looked up by unique id rather than by a guessed entity id.
+    total_id = er.async_get(hass).async_get_entity_id(
+        "light", DOMAIN, "casambi_lithernet_0_u15"
+    )
+    assert total_id is not None
+    assert hass.states.get(total_id).attributes["friendly_name"].endswith("All drivers")
+    total = hass.states.get(total_id)
     assert total.state == "on"
     assert total.attributes["brightness"] == 4
 

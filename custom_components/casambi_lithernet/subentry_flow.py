@@ -325,7 +325,11 @@ class UnitSubentryFlow(ConfigSubentryFlow):
                 )
             ] = _number(1, LEVEL_MAX)
 
-        if kind in (UnitKind.SIMPLE, UnitKind.TUNABLE_WHITE):
+        # Every kind that sends commands may run blind, groups included: their
+        # state topic is not retained and only comes around with the cyclic
+        # poll, so a group is the kind that most often looks stuck. Broadcast
+        # is blind by nature, so the box would change nothing there.
+        if kind is not UnitKind.BROADCAST:
             fields[
                 vol.Required(
                     CONF_OPTIMISTIC_OVERRIDE,

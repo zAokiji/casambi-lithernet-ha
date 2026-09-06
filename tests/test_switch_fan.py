@@ -306,3 +306,41 @@ async def test_wc_fan_matches_the_existing_yaml_entity(
     gateway.set_available(False)
     await hass.async_block_till_done()
     assert hass.states.get(SWITCH_ENTITY).state == "unavailable"
+
+
+# ------------------------------------------------------------------ naming --
+
+
+async def test_diagnostic_entities_carry_their_translated_names(
+    hass: HomeAssistant, setup_units
+) -> None:
+    """The problem sensor and the two enum sensors are named after their key.
+
+    Regression: a class level ``_attr_name = None`` on the base class made
+    Home Assistant skip the translation lookup, so every entity of an element
+    showed nothing but the device name and four "WC Luefter" rows appeared in
+    the entity list.
+    """
+    await setup_units([WC_SWITCH])
+    registry = er.async_get(hass)
+    expected = {
+        ("switch", "casambi_lithernet_0_u4"): "WC Luefter",
+        ("binary_sensor", "casambi_lithernet_0_u4_problem"): "WC Luefter Problem",
+        ("sensor", "casambi_lithernet_0_u4_condition"): "WC Luefter Condition",
+        (
+            "sensor",
+            "casambi_lithernet_0_u4_priority_source",
+        ): "WC Luefter Control source",
+    }
+    for (domain, unique_id), friendly_name in expected.items():
+        entity_id = registry.async_get_entity_id(domain, DOMAIN, unique_id)
+        assert entity_id is not None, unique_id
+        assert hass.states.get(entity_id).attributes["friendly_name"] == friendly_name
+    # And no two enabled entities of the element share a name.
+    entry_id = next(iter(hass.config_entries.async_entries(DOMAIN))).entry_id
+    names = [
+        hass.states.get(registry_entry.entity_id).attributes["friendly_name"]
+        for registry_entry in er.async_entries_for_config_entry(registry, entry_id)
+        if hass.states.get(registry_entry.entity_id) is not None
+    ]
+    assert len(names) == len(set(names)), names

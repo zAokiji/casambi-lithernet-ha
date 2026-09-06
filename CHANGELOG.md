@@ -74,3 +74,20 @@ Die Testreihe wurde um Prüfungen auf Leitungsebene erweitert, die für jede
 Entitätsart die vollständige Liste der gesendeten Nachrichten vergleichen,
 sowie um eine Vertragsreihe, die dieselben Zusagen gegen das echte Gateway und
 gegen die Test-Attrappe prüft.
+
+### Aus der ersten Installation behoben
+
+- **Alle Entitäten eines Elements hießen gleich.** Die Basisklasse belegte
+  `_attr_name` auf Klassenebene mit `None`; Home Assistant sieht dieses
+  Attribut vor dem Übersetzungsschlüssel an und übersprang deshalb die
+  Übersetzung. Problem-, Zustands- und Steuerungsquellen-Entität trugen nur
+  den Gerätenamen und erschienen als vier gleichnamige Zeilen in der
+  Entitätenliste. Vorhandene Entitäten bekommen den richtigen Namen nach
+  einem Neustart bzw. Neuladen des Eintrags.
+- **„Blind bedienen" für jede Elementart.** Das Feld gab es nur bei
+  dimmbaren Leuchten und Leuchten mit Farbtemperatur. Jetzt zeigen es alle
+  Arten außer Broadcast, das ohnehin blind läuft, und der Beschreibungstext
+  sagt, was die Wahl bewirkt: die Anzeige folgt sofort dem gesendeten Befehl,
+  statt auf die Bestätigung des Gateways zu warten. Das verhindert das
+  Zurückspringen des Schalters bei später oder ausbleibender Antwort; dafür
+  wird ein Befehl, der die Leuchte nie erreicht hat, als ausgeführt gezeigt.

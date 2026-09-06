@@ -77,7 +77,9 @@ class CasambiEntity(Entity):
     """
 
     _attr_has_entity_name = True
-    _attr_name: str | None = None
+    # Deliberately no ``_attr_name`` class attribute: Home Assistant checks
+    # ``hasattr(self, "_attr_name")`` before it looks at the translation key,
+    # so a class level ``None`` would silence every translated entity name.
     _attr_should_poll = False
 
     def __init__(
